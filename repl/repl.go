@@ -32,9 +32,7 @@ func Start(in io.Reader, out io.Writer) {
 				fmt.Printf("parser error: %s\n", err)
 			}
 		} else {
-			for _, stmt := range program.Statements {
-				fmt.Printf("%+v\n", stmt)
-			}
+			fmt.Print(program.String())
 		}
 
 		// for tok := l.NextToken(); tok.Type != token.EOF; tok = l.NextToken() {
