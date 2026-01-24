@@ -32,9 +32,5 @@ func StartRepl(in io.Reader, out io.Writer) {
 		} else {
 			fmt.Print(program.String())
 		}
-
-		// for tok := l.NextToken(); tok.Type != token.EOF; tok = l.NextToken() {
-		// 	fmt.Printf("%+v\n", tok)
-		// }
 	}
 }

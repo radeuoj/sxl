@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"strconv"
+	"strings"
 )
 
 type Node interface {
@@ -145,6 +146,29 @@ func (e *InfixExpression) String() string {
 	out.WriteString(e.Left.String())
 	out.WriteString(" " + e.Operator + " ")
 	out.WriteString(e.Right.String())
+	out.WriteString(")")
+
+	return out.String()
+}
+
+type CallExpression struct {
+	Function  Expression
+	Arguments []Expression
+}
+
+func (e *CallExpression) expressionNode() {}
+
+func (e *CallExpression) String() string {
+	var out bytes.Buffer
+
+	args := []string{}
+	for _, arg := range e.Arguments {
+		args = append(args, arg.String())
+	}
+
+	out.WriteString(e.Function.String())
+	out.WriteString("(")
+	out.WriteString(strings.Join(args, ", "))
 	out.WriteString(")")
 
 	return out.String()
