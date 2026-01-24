@@ -294,13 +294,15 @@ func (p *Parser) parseCallExpression(fn Expression) Expression {
 
 func (p *Parser) parseCallArguments() []Expression {
 	args := []Expression{}
-	p.nextToken()
 
 	if p.isPeekToken(RPAREN) {
+		p.nextToken()
 		return args
 	}
 
+	p.nextToken()
 	args = append(args, p.parseExpression(LOWEST))
+
 	for p.isPeekToken(COMMA) {
 		p.nextToken()
 		p.nextToken()

@@ -9,8 +9,8 @@ import (
 const PROMPT = "> "
 
 func StartRepl(in io.Reader, out io.Writer) {
-	fmt.Println("Welcome to SXL REPL")
 	scanner := bufio.NewScanner(in)
+	env := NewEnvironemnt()
 
 	for {
 		fmt.Printf(PROMPT)
@@ -30,8 +30,10 @@ func StartRepl(in io.Reader, out io.Writer) {
 			for _, err := range errors {
 				fmt.Printf("parser error: %s\n", err)
 			}
-		} else {
-			fmt.Print(program.String())
+			continue
 		}
+
+		val := Eval(program, env)
+		fmt.Printf("%s\n", val.Inspect())
 	}
 }
