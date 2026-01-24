@@ -142,40 +142,26 @@ func (p *Parser) peekPrecedence() int {
 func (p *Parser) ParseProgram() *Program {
 	program := &Program{}
 	program.Statements = []Statement{}
-	hasEndSemicolon := true
 
 	for !p.isCurToken(EOF_TOK) {
-		stmt, hasSemicolon := p.parseStatement()
+		stmt := p.parseStatement()
 		if stmt != nil {
 			program.Statements = append(program.Statements, stmt)
 		}
 
-		if !hasSemicolon {
-			if !p.isPeekToken(EOF_TOK) {
-				p.expectPeek(SEMICOLON_TOK)
-				return nil
-			} else {
-				hasEndSemicolon = false
-			}
-		}
-
 		p.nextToken()
-	}
-
-	if hasEndSemicolon {
-		program.Statements = append(program.Statements, &ExprStatement{Value: &NullLiteral{}})
 	}
 
 	return program
 }
 
 // returns statement and if it ends with a semicolon
-func (p *Parser) parseStatement() (Statement, bool) {
+func (p *Parser) parseStatement() Statement {
 	switch p.curToken.Type {
 	case LET_TOK:
-		return p.parseLetStatement(), true
+		return p.parseLetStatement()
 	case RETURN_TOK:
-		return p.parseReturnStatement(), true
+		return p.parseReturnStatement()
 	default:
 		return p.parseExprStatement()
 	}
@@ -197,8 +183,8 @@ func (p *Parser) parseLetStatement() *LetStatement {
 	p.nextToken()
 	stmt.Value = p.parseExpression(LOWEST_P)
 
-	if p.isPeekToken(SEMICOLON_TOK) {
-		p.nextToken()
+	if !p.expectPeek(SEMICOLON_TOK) {
+		return nil
 	}
 
 	return stmt
@@ -209,24 +195,23 @@ func (p *Parser) parseReturnStatement() *ReturnStatement {
 	p.nextToken()
 	stmt.Value = p.parseExpression(LOWEST_P)
 
-	if p.isPeekToken(SEMICOLON_TOK) {
-		p.nextToken()
+	if !p.expectPeek(SEMICOLON_TOK) {
+		return nil
 	}
 
 	return stmt
 }
 
 // returns statement and if it ends with a semicolon
-func (p *Parser) parseExprStatement() (*ExprStatement, bool) {
+func (p *Parser) parseExprStatement() *ExprStatement {
 	stmt := &ExprStatement{}
 	stmt.Value = p.parseExpression(LOWEST_P)
 
-	hasSemicolon := p.isPeekToken(SEMICOLON_TOK)
-	if hasSemicolon {
-		p.nextToken()
+	if !p.expectPeek(SEMICOLON_TOK) {
+		return nil
 	}
 
-	return stmt, hasSemicolon
+	return stmt
 }
 
 func (p *Parser) parseExpression(precedence int) Expression {
