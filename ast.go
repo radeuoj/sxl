@@ -73,6 +73,48 @@ func (s *ReturnStatement) String() string {
 	return out.String()
 }
 
+type BlockStatement struct {
+	Statements []Statement
+}
+
+func (s *BlockStatement) statementNode() {}
+
+func (s *BlockStatement) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("{\n")
+	for _, s := range s.Statements {
+		out.WriteString(s.String())
+	}
+	out.WriteString("}\n")
+
+	return out.String()
+}
+
+type IfStatement struct {
+	Condition Expression
+	Then      Statement
+	Else      Statement
+}
+
+func (s *IfStatement) statementNode() {}
+
+func (s *IfStatement) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("if ")
+	out.WriteString(s.Condition.String())
+	out.WriteString(" ")
+	out.WriteString(s.Then.String())
+
+	if s.Else != nil {
+		out.WriteString("else ")
+		out.WriteString(s.Else.String())
+	}
+
+	return out.String()
+}
+
 type ExprStatement struct {
 	Value Expression
 }

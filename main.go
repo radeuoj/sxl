@@ -15,6 +15,19 @@ func main() {
 }
 
 func evalFile(path string) {
+	program, errors := parseFile(path)
+
+	if len(errors) > 0 {
+		printParserErrors(errors)
+		return
+	}
+
+	env := NewEnvironemnt()
+	val := Eval(program, env)
+	fmt.Printf("%s\n", val.Inspect())
+}
+
+func parseFile(path string) (program *Program, errors []string) {
 	bytes, err := os.ReadFile(path)
 	if err != nil {
 		fmt.Printf("Failed to open file %s\n", path)
@@ -23,17 +36,22 @@ func evalFile(path string) {
 	l := NewLexer(string(bytes))
 	p := NewParser(l)
 
-	program := p.ParseProgram()
-	errors := p.Errors()
+	return p.ParseProgram(), p.Errors()
+}
+
+func printParserErrors(errors []string) {
+	for _, err := range errors {
+		fmt.Printf("parser error: %s\n", err)
+	}
+}
+
+func parseAndPrintFile(path string) {
+	program, errors := parseFile(path)
 
 	if len(errors) > 0 {
-		for _, err := range errors {
-			fmt.Printf("parser error: %s\n", err)
-		}
+		printParserErrors(errors)
 		return
 	}
 
-	env := NewEnvironemnt()
-	val := Eval(program, env)
-	fmt.Printf("%s\n", val.Inspect())
+	fmt.Printf("%s\n", program.String())
 }

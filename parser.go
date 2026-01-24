@@ -162,6 +162,10 @@ func (p *Parser) parseStatement() Statement {
 		return p.parseLetStatement()
 	case RETURN_TOK:
 		return p.parseReturnStatement()
+	case LBRACE_TOK:
+		return p.parseBlockStatement()
+	case IF_TOK:
+		return p.parseIfStatement()
 	default:
 		return p.parseExprStatement()
 	}
@@ -197,6 +201,45 @@ func (p *Parser) parseReturnStatement() *ReturnStatement {
 
 	if !p.expectPeek(SEMICOLON_TOK) {
 		return nil
+	}
+
+	return stmt
+}
+
+func (p *Parser) parseBlockStatement() *BlockStatement {
+	block := &BlockStatement{Statements: []Statement{}}
+	p.nextToken()
+
+	for !p.isCurToken(RBRACE_TOK) && !p.isCurToken(EOF_TOK) {
+		stmt := p.parseStatement()
+		block.Statements = append(block.Statements, stmt)
+		p.nextToken()
+	}
+
+	return block
+}
+
+func (p *Parser) parseIfStatement() *IfStatement {
+	stmt := &IfStatement{}
+	p.nextToken()
+	stmt.Condition = p.parseExpression(LOWEST_P)
+
+	if !p.expectPeek(LBRACE_TOK) {
+		return nil
+	}
+	stmt.Then = p.parseBlockStatement()
+
+	if p.isPeekToken(ELSE_TOK) {
+		p.nextToken()
+
+		if p.isPeekToken(IF_TOK) { // if else syntax
+			p.nextToken()
+			stmt.Else = p.parseIfStatement()
+		} else if p.expectPeek(LBRACE_TOK) {
+			stmt.Else = p.parseBlockStatement()
+		} else {
+			return nil
+		}
 	}
 
 	return stmt

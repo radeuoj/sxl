@@ -6,6 +6,10 @@ func Eval(node Node, env *Environment) Value {
 		return evalProgram(node, env)
 	case *LetStatement:
 		return evalLetStatement(node, env)
+	case *BlockStatement:
+		return evalBlockStatement(node, env)
+	case *IfStatement:
+		return evalIfStatement(node, env)
 	case *ExprStatement:
 		return Eval(node.Value, env)
 	case *IntLiteral:
@@ -30,17 +34,7 @@ func Eval(node Node, env *Environment) Value {
 		}
 
 		if node.Operator == "=" {
-			switch ident := node.Left.(type) {
-			case *Identifier:
-				ok := env.Assign(ident.Value, right)
-				if ok {
-					return right
-				} else {
-					return NewErrorValue("identifier not found: %s", ident.Value)
-				}
-			default:
-				return NewErrorValue("%s is not an identifier", ident.String())
-			}
+			return evalAssignmentExpression(node.Left, right, env)
 		}
 
 		left := Eval(node.Left, env)
@@ -79,6 +73,36 @@ func evalLetStatement(stmt *LetStatement, env *Environment) Value {
 		return NULL_VAL
 	} else {
 		return NewErrorValue("identifier already exists: %s", stmt.Name.Value)
+	}
+}
+
+func evalBlockStatement(block *BlockStatement, env *Environment) Value {
+	var res Value
+
+	for _, stmt := range block.Statements {
+		res = Eval(stmt, env)
+
+		switch res := res.(type) {
+		case *ErrorValue:
+			return res
+		}
+	}
+
+	return res
+}
+
+func evalIfStatement(stmt *IfStatement, env *Environment) Value {
+	condition := Eval(stmt.Condition, env)
+	if condition.Type() != BOOL_VAL_T {
+		return NewErrorValue("if statement condition must evaluate to bool not %s", condition.Type())
+	}
+
+	if condition.(*BoolValue).Value {
+		return Eval(stmt.Then, env)
+	} else if stmt.Else != nil {
+		return Eval(stmt.Else, env)
+	} else {
+		return NULL_VAL
 	}
 }
 
@@ -170,5 +194,19 @@ func evalBoolInfixExpression(operator string, left, right *BoolValue) Value {
 		return NewBoolValue(left != right)
 	default:
 		return NewErrorValue("type bool is incompatible with %s operator", operator)
+	}
+}
+
+func evalAssignmentExpression(left Expression, right Value, env *Environment) Value {
+	switch ident := left.(type) {
+	case *Identifier:
+		ok := env.Assign(ident.Value, right)
+		if ok {
+			return right
+		} else {
+			return NewErrorValue("identifier not found: %s", ident.Value)
+		}
+	default:
+		return NewErrorValue("%s is not an identifier", ident.String())
 	}
 }

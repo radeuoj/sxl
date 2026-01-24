@@ -1,0 +1,10 @@
+let a = 1;
+let b = 2;
+
+if a > b {
+    a;
+} else if a == b {
+    0;
+} else {
+    b;
+}
