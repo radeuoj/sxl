@@ -22,14 +22,28 @@ func Eval(node Node, env *Environment) Value {
 
 		return evalPrefixExpression(node.Operator, right)
 	case *InfixExpression:
-		left := Eval(node.Left, env)
-		if IsError(left) {
-			return left
-		}
-
 		right := Eval(node.Right, env)
 		if IsError(right) {
 			return right
+		}
+
+		if node.Operator == "=" {
+			switch ident := node.Left.(type) {
+			case *Identifier:
+				ok := env.Assign(ident.Value, right)
+				if ok {
+					return right
+				} else {
+					return NewErrorValue("identifier not found: %s", ident.Value)
+				}
+			default:
+				return NewErrorValue("%s is not an identifier", ident.String())
+			}
+		}
+
+		left := Eval(node.Left, env)
+		if IsError(left) {
+			return left
 		}
 
 		return evalInfixExpression(node.Operator, left, right)
@@ -59,14 +73,17 @@ func evalLetStatement(stmt *LetStatement, env *Environment) Value {
 		return val
 	}
 
-	env.Set(stmt.Name.Value, val)
-	return NULL_VAL
+	if env.Let(stmt.Name.Value, val) {
+		return NULL_VAL
+	} else {
+		return NewErrorValue("identifier already exists: %s", stmt.Name.Value)
+	}
 }
 
 func evalIdentifier(ident *Identifier, env *Environment) Value {
 	val, ok := env.Get(ident.Value)
 	if !ok {
-		return NewErrorValue("identifier not found: " + ident.Value)
+		return NewErrorValue("identifier not found: %s", ident.Value)
 	}
 
 	return val
@@ -104,18 +121,12 @@ func evalMinusPrefixExpression(right Value) Value {
 }
 
 func evalInfixExpression(operator string, left, right Value) Value {
-	if left.Type() != right.Type() {
-		return NewErrorValue("types mismatch %s %s %s", left.Type(), operator, right.Type())
-	}
-	valType := left.Type()
-
-	switch valType {
-	case INT_VAL_T:
+	if left.Type() == INT_VAL_T && right.Type() == INT_VAL_T {
 		return evalIntInfixExpression(operator, left.(*IntValue), right.(*IntValue))
-	case BOOL_VAL_T:
+	} else if left.Type() == BOOL_VAL_T && right.Type() == BOOL_VAL_T {
 		return evalBoolInfixExpression(operator, left.(*BoolValue), right.(*BoolValue))
-	default:
-		return NewErrorValue("type %s is incompatible with %s operator", valType, operator)
+	} else {
+		return NewErrorValue("types mismatch %s %s %s", left.Type(), operator, right.Type())
 	}
 }
 

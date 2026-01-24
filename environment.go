@@ -14,6 +14,24 @@ func (e *Environment) Get(name string) (Value, bool) {
 	return val, ok
 }
 
-func (e *Environment) Set(name string, val Value) {
+func (e *Environment) Let(name string, val Value) bool {
+	if _, ok := e.store[name]; ok {
+		return false
+	} else {
+		e.store[name] = val
+		return true
+	}
+}
+
+func (e *Environment) Assign(name string, val Value) bool {
+	if _, ok := e.store[name]; ok {
+		e.store[name] = val
+		return true
+	} else {
+		return false
+	}
+}
+
+func (e *Environment) set(name string, val Value) {
 	e.store[name] = val
 }

@@ -15,6 +15,7 @@ const (
 	EQUALS_P
 	SUM_P
 	PRODUCT_P
+	ASSIGN_P
 	PREFIX_P
 	CALL_P
 )
@@ -30,6 +31,7 @@ var precedences = map[TokenType]int{
 	MINUS_TOK:     SUM_P,
 	ASTERISK_TOK:  PRODUCT_P,
 	SLASH_TOK:     PRODUCT_P,
+	ASSIGN_TOK:    ASSIGN_P,
 	LPAREN_TOK:    CALL_P,
 }
 
@@ -69,6 +71,7 @@ func NewParser(l *Lexer) *Parser {
 	p.registerInfix(MINUS_TOK, p.parseInfixExpression)
 	p.registerInfix(ASTERISK_TOK, p.parseInfixExpression)
 	p.registerInfix(SLASH_TOK, p.parseInfixExpression)
+	p.registerInfix(ASSIGN_TOK, p.parseInfixExpression)
 	p.registerInfix(LPAREN_TOK, p.parseCallExpression)
 
 	return p
