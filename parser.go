@@ -12,10 +12,10 @@ type (
 
 const (
 	LOWEST_P int = iota
+	ASSIGN_P
 	EQUALS_P
 	SUM_P
 	PRODUCT_P
-	ASSIGN_P
 	PREFIX_P
 	CALL_P
 )
