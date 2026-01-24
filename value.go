@@ -1,17 +1,21 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"strconv"
+	"strings"
 )
 
 type ValueType string
 
 const (
-	INT_VAL_T   = "int"
-	BOOL_VAL_T  = "bool"
-	NULL_VAL_T  = "null"
-	ERROR_VAL_T = "error"
+	INT_VAL_T    = "int"
+	BOOL_VAL_T   = "bool"
+	NULL_VAL_T   = "null"
+	ERROR_VAL_T  = "error"
+	FN_VAL_T     = "fn"
+	RETURN_VAL_T = "return"
 )
 
 var (
@@ -92,5 +96,51 @@ func IsError(val Value) bool {
 		return val.Type() == ERROR_VAL_T
 	} else {
 		return false
+	}
+}
+
+type FnValue struct {
+	Params []*Identifier
+	Body   *BlockStatement
+	Env    *Environment
+}
+
+func (v *FnValue) Type() ValueType {
+	return FN_VAL_T
+}
+
+func (v *FnValue) Inspect() string {
+	var out bytes.Buffer
+
+	params := []string{}
+	for _, p := range v.Params {
+		params = append(params, p.String())
+	}
+
+	out.WriteString("fn(")
+	out.WriteString(strings.Join(params, ", "))
+	out.WriteString(") ")
+	out.WriteString(v.Body.String())
+
+	return out.String()
+}
+
+type ReturnValue struct {
+	Value Value
+}
+
+func (v *ReturnValue) Type() ValueType {
+	return RETURN_VAL_T
+}
+
+func (v *ReturnValue) Inspect() string {
+	return "return value: " + v.Value.Inspect()
+}
+
+func unwrapReturnValue(val Value) Value {
+	if returnVal, ok := val.(*ReturnValue); ok {
+		return returnVal.Value
+	} else {
+		return val
 	}
 }

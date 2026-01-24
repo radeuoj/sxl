@@ -223,3 +223,26 @@ func (e *CallExpression) String() string {
 
 	return out.String()
 }
+
+type FnLiteral struct {
+	Params []*Identifier
+	Body   *BlockStatement
+}
+
+func (e *FnLiteral) expressionNode() {}
+
+func (e *FnLiteral) String() string {
+	var out bytes.Buffer
+
+	params := []string{}
+	for _, p := range e.Params {
+		params = append(params, p.String())
+	}
+
+	out.WriteString("fn(")
+	out.WriteString(strings.Join(params, ", "))
+	out.WriteString(") ")
+	out.WriteString(e.Body.String())
+
+	return out.String()
+}

@@ -53,5 +53,5 @@ func parseAndPrintFile(path string) {
 		return
 	}
 
-	fmt.Printf("%s\n", program.String())
+	fmt.Printf("%s", program.String())
 }

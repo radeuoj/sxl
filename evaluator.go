@@ -3,13 +3,15 @@ package main
 func Eval(node Node, env *Environment) Value {
 	switch node := node.(type) {
 	case *Program:
-		return evalProgram(node, env)
+		return unwrapReturnValue(evalStatements(node.Statements, env))
 	case *LetStatement:
 		return evalLetStatement(node, env)
 	case *BlockStatement:
-		return evalBlockStatement(node, env)
+		return evalStatements(node.Statements, env)
 	case *IfStatement:
 		return evalIfStatement(node, env)
+	case *ReturnStatement:
+		return &ReturnValue{Value: Eval(node.Value, env)}
 	case *ExprStatement:
 		return Eval(node.Value, env)
 	case *IntLiteral:
@@ -20,6 +22,8 @@ func Eval(node Node, env *Environment) Value {
 		return &NullValue{}
 	case *Identifier:
 		return evalIdentifier(node, env)
+	case *FnLiteral:
+		return &FnValue{Params: node.Params, Body: node.Body, Env: env}
 	case *PrefixExpression:
 		right := Eval(node.Right, env)
 		if IsError(right) {
@@ -43,24 +47,21 @@ func Eval(node Node, env *Environment) Value {
 		}
 
 		return evalInfixExpression(node.Operator, left, right)
+	case *CallExpression:
+		fn := Eval(node.Function, env)
+		if IsError(fn) {
+			return fn
+		}
+
+		args := evalExpressions(node.Arguments, env)
+		if len(args) == 1 && IsError(args[0]) {
+			return args[0]
+		}
+
+		return evalCall(fn, args)
 	default:
 		return nil
 	}
-}
-
-func evalProgram(program *Program, env *Environment) Value {
-	var res Value
-
-	for _, stmt := range program.Statements {
-		res = Eval(stmt, env)
-
-		switch res := res.(type) {
-		case *ErrorValue:
-			return res
-		}
-	}
-
-	return res
 }
 
 func evalLetStatement(stmt *LetStatement, env *Environment) Value {
@@ -76,10 +77,10 @@ func evalLetStatement(stmt *LetStatement, env *Environment) Value {
 	}
 }
 
-func evalBlockStatement(block *BlockStatement, env *Environment) Value {
+func evalStatements(stmts []Statement, env *Environment) Value {
 	var res Value
 
-	for _, stmt := range block.Statements {
+	for _, stmt := range stmts {
 		res = Eval(stmt, env)
 
 		switch res := res.(type) {
@@ -104,6 +105,46 @@ func evalIfStatement(stmt *IfStatement, env *Environment) Value {
 	} else {
 		return NULL_VAL
 	}
+}
+
+func evalExpressions(exprs []Expression, env *Environment) []Value {
+	var res []Value
+
+	for _, expr := range exprs {
+		val := Eval(expr, env)
+		if IsError(val) {
+			return []Value{val}
+		}
+
+		res = append(res, val)
+	}
+
+	return res
+}
+
+func evalCall(fn Value, args []Value) Value {
+	fnVal, ok := fn.(*FnValue)
+	if !ok {
+		return NewErrorValue("%s is not a function", fn.Type())
+	}
+
+	if len(args) != len(fnVal.Params) {
+		return NewErrorValue("invalid number of arguments: wanted %d, got %d", len(fnVal.Params), len(args))
+	}
+
+	env := extendFnEnv(fnVal, args)
+	val := Eval(fnVal.Body, env)
+	return unwrapReturnValue(val)
+}
+
+func extendFnEnv(fn *FnValue, args []Value) *Environment {
+	env := fn.Env.NewChild()
+
+	for paramIndex, param := range fn.Params {
+		env.Let(param.Value, args[paramIndex])
+	}
+
+	return env
 }
 
 func evalIdentifier(ident *Identifier, env *Environment) Value {
