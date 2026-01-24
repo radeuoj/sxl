@@ -6,7 +6,6 @@ import (
 )
 
 type Node interface {
-	TokenLiteral() string
 	String() string
 }
 
@@ -34,24 +33,12 @@ func (p *Program) String() string {
 	return out.String()
 }
 
-func (p *Program) TokenLiteral() string {
-	if len(p.Statements) > 0 {
-		return p.Statements[0].TokenLiteral()
-	} else {
-		return ""
-	}
-}
-
 type LetStatement struct {
 	Name  *Identifier
 	Value Expression
 }
 
 func (s *LetStatement) statementNode() {}
-
-func (s *LetStatement) TokenLiteral() string {
-	return LET
-}
 
 func (s *LetStatement) String() string {
 	var out bytes.Buffer
@@ -75,10 +62,6 @@ type ReturnStatement struct {
 
 func (s *ReturnStatement) statementNode() {}
 
-func (s *ReturnStatement) TokenLiteral() string {
-	return RETURN
-}
-
 func (s *ReturnStatement) String() string {
 	var out bytes.Buffer
 
@@ -95,10 +78,6 @@ type ExprStatement struct {
 
 func (s *ExprStatement) statementNode() {}
 
-func (s *ExprStatement) TokenLiteral() string {
-	return "WTF?"
-}
-
 func (s *ExprStatement) String() string {
 	return s.Value.String() + ";\n"
 }
@@ -108,10 +87,6 @@ type Identifier struct {
 }
 
 func (i *Identifier) expressionNode() {}
-
-func (i *Identifier) TokenLiteral() string {
-	return IDENT
-}
 
 func (i *Identifier) String() string {
 	return i.Value
@@ -123,12 +98,18 @@ type IntLiteral struct {
 
 func (i *IntLiteral) expressionNode() {}
 
-func (i *IntLiteral) TokenLiteral() string {
-	return INT
-}
-
 func (i *IntLiteral) String() string {
 	return strconv.Itoa(int(i.Value))
+}
+
+type BoolLiteral struct {
+	Value bool
+}
+
+func (b *BoolLiteral) expressionNode() {}
+
+func (b *BoolLiteral) String() string {
+	return strconv.FormatBool(b.Value)
 }
 
 type PrefixExpression struct {
@@ -137,10 +118,6 @@ type PrefixExpression struct {
 }
 
 func (e *PrefixExpression) expressionNode() {}
-
-func (e *PrefixExpression) TokenLiteral() string {
-	return "WTF!"
-}
 
 func (e *PrefixExpression) String() string {
 	var out bytes.Buffer
@@ -160,10 +137,6 @@ type InfixExpression struct {
 }
 
 func (e *InfixExpression) expressionNode() {}
-
-func (e *InfixExpression) TokenLiteral() string {
-	return "WTF!"
-}
 
 func (e *InfixExpression) String() string {
 	var out bytes.Buffer
