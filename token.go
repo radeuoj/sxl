@@ -1,4 +1,4 @@
-package token
+package main
 
 type TokenType string
 
@@ -22,6 +22,10 @@ const (
 	BANG      = "!"
 	EQUAL     = "=="
 	NOT_EQUAL = "!="
+	LT        = "<"
+	GT        = ">"
+	LTE       = "<="
+	GTE       = ">="
 
 	COMMA     = ","
 	SEMICOLON = ";"
@@ -50,7 +54,7 @@ var keywords = map[string]TokenType{
 	"false":  FALSE,
 }
 
-func New(tokenType TokenType, ch byte) Token {
+func NewToken(tokenType TokenType, ch byte) Token {
 	return Token{Type: tokenType, Literal: string(ch)}
 }
 

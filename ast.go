@@ -1,8 +1,7 @@
-package ast
+package main
 
 import (
 	"bytes"
-	"mkl/token"
 	"strconv"
 )
 
@@ -51,7 +50,7 @@ type LetStatement struct {
 func (s *LetStatement) statementNode() {}
 
 func (s *LetStatement) TokenLiteral() string {
-	return token.LET
+	return LET
 }
 
 func (s *LetStatement) String() string {
@@ -77,7 +76,7 @@ type ReturnStatement struct {
 func (s *ReturnStatement) statementNode() {}
 
 func (s *ReturnStatement) TokenLiteral() string {
-	return token.RETURN
+	return RETURN
 }
 
 func (s *ReturnStatement) String() string {
@@ -111,7 +110,7 @@ type Identifier struct {
 func (i *Identifier) expressionNode() {}
 
 func (i *Identifier) TokenLiteral() string {
-	return token.IDENT
+	return IDENT
 }
 
 func (i *Identifier) String() string {
@@ -125,7 +124,7 @@ type IntLiteral struct {
 func (i *IntLiteral) expressionNode() {}
 
 func (i *IntLiteral) TokenLiteral() string {
-	return token.INT
+	return INT
 }
 
 func (i *IntLiteral) String() string {

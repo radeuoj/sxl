@@ -1,16 +1,14 @@
-package repl
+package main
 
 import (
 	"bufio"
 	"fmt"
 	"io"
-	"mkl/lexer"
-	"mkl/parser"
 )
 
 const PROMPT = "> "
 
-func Start(in io.Reader, out io.Writer) {
+func StartRepl(in io.Reader, out io.Writer) {
 	scanner := bufio.NewScanner(in)
 
 	for {
@@ -21,8 +19,8 @@ func Start(in io.Reader, out io.Writer) {
 		}
 
 		line := scanner.Text()
-		l := lexer.New(line)
-		p := parser.New(l)
+		l := NewLexer(line)
+		p := NewParser(l)
 
 		program := p.ParseProgram()
 		errors := p.Errors()

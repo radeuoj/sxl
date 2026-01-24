@@ -1,8 +1,4 @@
-package lexer
-
-import (
-	"mkl/token"
-)
+package main
 
 type Lexer struct {
 	input   string
@@ -11,7 +7,7 @@ type Lexer struct {
 	ch      byte
 }
 
-func New(input string) *Lexer {
+func NewLexer(input string) *Lexer {
 	l := &Lexer{input: input}
 	l.readChar()
 	return l
@@ -35,60 +31,76 @@ func (l *Lexer) peekChar() byte {
 	}
 }
 
-func (l *Lexer) NextToken() token.Token {
-	var tok token.Token
+func (l *Lexer) NextToken() Token {
+	var tok Token
 	l.skipWhitespace()
 
 	switch l.ch {
 	case '=':
 		if l.peekChar() == '=' {
 			l.readChar()
-			tok.Type = token.EQUAL
+			tok.Type = EQUAL
 			tok.Literal = "=="
 		} else {
-			tok = token.New(token.ASSIGN, l.ch)
+			tok = NewToken(ASSIGN, l.ch)
+		}
+	case '<':
+		if l.peekChar() == '=' {
+			l.readChar()
+			tok.Type = LTE
+			tok.Literal = "<="
+		} else {
+			tok = NewToken(LT, l.ch)
+		}
+	case '>':
+		if l.peekChar() == '=' {
+			l.readChar()
+			tok.Type = GTE
+			tok.Literal = ">="
+		} else {
+			tok = NewToken(GT, l.ch)
 		}
 	case '+':
-		tok = token.New(token.PLUS, l.ch)
+		tok = NewToken(PLUS, l.ch)
 	case '-':
-		tok = token.New(token.MINUS, l.ch)
+		tok = NewToken(MINUS, l.ch)
 	case '*':
-		tok = token.New(token.ASTERISK, l.ch)
+		tok = NewToken(ASTERISK, l.ch)
 	case '/':
-		tok = token.New(token.SLASH, l.ch)
+		tok = NewToken(SLASH, l.ch)
 	case '!':
 		if l.peekChar() == '=' {
 			l.readChar()
-			tok.Type = token.EQUAL
+			tok.Type = EQUAL
 			tok.Literal = "!="
 		} else {
-			tok = token.New(token.BANG, l.ch)
+			tok = NewToken(BANG, l.ch)
 		}
 	case ',':
-		tok = token.New(token.COMMA, l.ch)
+		tok = NewToken(COMMA, l.ch)
 	case ';':
-		tok = token.New(token.SEMICOLON, l.ch)
+		tok = NewToken(SEMICOLON, l.ch)
 	case '(':
-		tok = token.New(token.LPAREN, l.ch)
+		tok = NewToken(LPAREN, l.ch)
 	case ')':
-		tok = token.New(token.RPAREN, l.ch)
+		tok = NewToken(RPAREN, l.ch)
 	case '{':
-		tok = token.New(token.LBRACE, l.ch)
+		tok = NewToken(LBRACE, l.ch)
 	case '}':
-		tok = token.New(token.RBRACE, l.ch)
+		tok = NewToken(RBRACE, l.ch)
 	case 0:
-		tok = token.New(token.EOF, 0)
+		tok = NewToken(EOF, 0)
 	default:
 		if isIdentChar(l.ch) && !isDigit(l.ch) {
 			tok.Literal = l.readIdent()
-			tok.Type = token.LookupIdent(tok.Literal)
+			tok.Type = LookupIdent(tok.Literal)
 			return tok
 		} else if isDigit(l.ch) {
-			tok.Type = token.INT
+			tok.Type = INT
 			tok.Literal = l.readInt()
 			return tok
 		} else {
-			tok = token.New(token.ILLEGAL, l.ch)
+			tok = NewToken(ILLEGAL, l.ch)
 		}
 	}
 
