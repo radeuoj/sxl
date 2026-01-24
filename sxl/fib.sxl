@@ -6,4 +6,4 @@ let fib = fn(n) {
     }
 };
 
-fib(35);
+fib(35); // this is ridiculously slow (15s) vs sub 100ms on rust

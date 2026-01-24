@@ -67,7 +67,14 @@ func (l *Lexer) NextToken() Token {
 	case '*':
 		tok = NewToken(ASTERISK_TOK, l.ch)
 	case '/':
-		tok = NewToken(SLASH_TOK, l.ch)
+		if l.peekChar() == '/' { // comment
+			l.readChar()
+			l.readChar()
+			l.skipComment()
+			return l.NextToken()
+		} else {
+			tok = NewToken(SLASH_TOK, l.ch)
+		}
 	case '!':
 		if l.peekChar() == '=' {
 			l.readChar()
@@ -110,6 +117,12 @@ func (l *Lexer) NextToken() Token {
 
 func (l *Lexer) skipWhitespace() {
 	for l.ch == ' ' || l.ch == '\t' || l.ch == '\n' || l.ch == '\r' {
+		l.readChar()
+	}
+}
+
+func (l *Lexer) skipComment() {
+	for l.ch != '\n' && l.ch != 0 {
 		l.readChar()
 	}
 }

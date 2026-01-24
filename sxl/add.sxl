@@ -2,4 +2,5 @@ let add = fn(a, b) {
     return a + b;
 };
 
-add(20, 30);
+add(20, 30); // this adds 2 things
+add(67, 2);
