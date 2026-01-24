@@ -9,6 +9,7 @@ import (
 const PROMPT = "> "
 
 func StartRepl(in io.Reader, out io.Writer) {
+	fmt.Println("Welcome to SXL REPL")
 	scanner := bufio.NewScanner(in)
 
 	for {
