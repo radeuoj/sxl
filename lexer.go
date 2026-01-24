@@ -39,68 +39,68 @@ func (l *Lexer) NextToken() Token {
 	case '=':
 		if l.peekChar() == '=' {
 			l.readChar()
-			tok.Type = EQUAL
+			tok.Type = EQUAL_TOK
 			tok.Literal = "=="
 		} else {
-			tok = NewToken(ASSIGN, l.ch)
+			tok = NewToken(ASSIGN_TOK, l.ch)
 		}
 	case '<':
 		if l.peekChar() == '=' {
 			l.readChar()
-			tok.Type = LTE
+			tok.Type = LTE_TOK
 			tok.Literal = "<="
 		} else {
-			tok = NewToken(LT, l.ch)
+			tok = NewToken(LT_TOK, l.ch)
 		}
 	case '>':
 		if l.peekChar() == '=' {
 			l.readChar()
-			tok.Type = GTE
+			tok.Type = GTE_TOK
 			tok.Literal = ">="
 		} else {
-			tok = NewToken(GT, l.ch)
+			tok = NewToken(GT_TOK, l.ch)
 		}
 	case '+':
-		tok = NewToken(PLUS, l.ch)
+		tok = NewToken(PLUS_TOK, l.ch)
 	case '-':
-		tok = NewToken(MINUS, l.ch)
+		tok = NewToken(MINUS_TOK, l.ch)
 	case '*':
-		tok = NewToken(ASTERISK, l.ch)
+		tok = NewToken(ASTERISK_TOK, l.ch)
 	case '/':
-		tok = NewToken(SLASH, l.ch)
+		tok = NewToken(SLASH_TOK, l.ch)
 	case '!':
 		if l.peekChar() == '=' {
 			l.readChar()
-			tok.Type = EQUAL
+			tok.Type = EQUAL_TOK
 			tok.Literal = "!="
 		} else {
-			tok = NewToken(BANG, l.ch)
+			tok = NewToken(BANG_TOK, l.ch)
 		}
 	case ',':
-		tok = NewToken(COMMA, l.ch)
+		tok = NewToken(COMMA_TOK, l.ch)
 	case ';':
-		tok = NewToken(SEMICOLON, l.ch)
+		tok = NewToken(SEMICOLON_TOK, l.ch)
 	case '(':
-		tok = NewToken(LPAREN, l.ch)
+		tok = NewToken(LPAREN_TOK, l.ch)
 	case ')':
-		tok = NewToken(RPAREN, l.ch)
+		tok = NewToken(RPAREN_TOK, l.ch)
 	case '{':
-		tok = NewToken(LBRACE, l.ch)
+		tok = NewToken(LBRACE_TOK, l.ch)
 	case '}':
-		tok = NewToken(RBRACE, l.ch)
+		tok = NewToken(RBRACE_TOK, l.ch)
 	case 0:
-		tok = NewToken(EOF, 0)
+		tok = NewToken(EOF_TOK, 0)
 	default:
 		if isIdentChar(l.ch) && !isDigit(l.ch) {
 			tok.Literal = l.readIdent()
 			tok.Type = LookupIdent(tok.Literal)
 			return tok
 		} else if isDigit(l.ch) {
-			tok.Type = INT
+			tok.Type = INT_TOK
 			tok.Literal = l.readInt()
 			return tok
 		} else {
-			tok = NewToken(ILLEGAL, l.ch)
+			tok = NewToken(ILLEGAL_TOK, l.ch)
 		}
 	}
 

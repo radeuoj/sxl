@@ -8,50 +8,50 @@ type Token struct {
 }
 
 const (
-	ILLEGAL = "ILLEGAL"
-	EOF     = "EOF"
+	ILLEGAL_TOK = "ILLEGAL"
+	EOF_TOK     = "EOF"
 
-	IDENT = "IDENT"
-	INT   = "INT"
+	IDENT_TOK = "IDENT"
+	INT_TOK   = "INT"
 
-	ASSIGN    = "="
-	PLUS      = "+"
-	MINUS     = "-"
-	ASTERISK  = "*"
-	SLASH     = "/"
-	BANG      = "!"
-	EQUAL     = "=="
-	NOT_EQUAL = "!="
-	LT        = "<"
-	GT        = ">"
-	LTE       = "<="
-	GTE       = ">="
+	ASSIGN_TOK    = "="
+	PLUS_TOK      = "+"
+	MINUS_TOK     = "-"
+	ASTERISK_TOK  = "*"
+	SLASH_TOK     = "/"
+	BANG_TOK      = "!"
+	EQUAL_TOK     = "=="
+	NOT_EQUAL_TOK = "!="
+	LT_TOK        = "<"
+	GT_TOK        = ">"
+	LTE_TOK       = "<="
+	GTE_TOK       = ">="
 
-	COMMA     = ","
-	SEMICOLON = ";"
+	COMMA_TOK     = ","
+	SEMICOLON_TOK = ";"
 
-	LPAREN = "("
-	RPAREN = ")"
-	LBRACE = "{"
-	RBRACE = "}"
+	LPAREN_TOK = "("
+	RPAREN_TOK = ")"
+	LBRACE_TOK = "{"
+	RBRACE_TOK = "}"
 
-	FN     = "FN"
-	LET    = "LET"
-	IF     = "IF"
-	ELSE   = "ELSE"
-	RETURN = "RETURN"
-	TRUE   = "TRUE"
-	FALSE  = "FALSE"
+	FN_TOK     = "FN"
+	LET_TOK    = "LET"
+	IF_TOK     = "IF"
+	ELSE_TOK   = "ELSE"
+	RETURN_TOK = "RETURN"
+	TRUE_TOK   = "TRUE"
+	FALSE_TOK  = "FALSE"
 )
 
 var keywords = map[string]TokenType{
-	"let":    LET,
-	"fn":     FN,
-	"if":     IF,
-	"else":   ELSE,
-	"return": RETURN,
-	"true":   TRUE,
-	"false":  FALSE,
+	"let":    LET_TOK,
+	"fn":     FN_TOK,
+	"if":     IF_TOK,
+	"else":   ELSE_TOK,
+	"return": RETURN_TOK,
+	"true":   TRUE_TOK,
+	"false":  FALSE_TOK,
 }
 
 func NewToken(tokenType TokenType, ch byte) Token {
@@ -62,5 +62,5 @@ func LookupIdent(ident string) TokenType {
 	if tok, ok := keywords[ident]; ok {
 		return tok
 	}
-	return IDENT
+	return IDENT_TOK
 }
