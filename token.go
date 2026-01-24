@@ -42,6 +42,7 @@ const (
 	RETURN_TOK = "RETURN"
 	TRUE_TOK   = "TRUE"
 	FALSE_TOK  = "FALSE"
+	NULL_TOK   = "NULL"
 )
 
 var keywords = map[string]TokenType{
@@ -52,6 +53,7 @@ var keywords = map[string]TokenType{
 	"return": RETURN_TOK,
 	"true":   TRUE_TOK,
 	"false":  FALSE_TOK,
+	"null":   NULL_TOK,
 }
 
 func NewToken(tokenType TokenType, ch byte) Token {

@@ -12,6 +12,8 @@ func Eval(node Node, env *Environment) Value {
 		return &IntValue{Value: node.Value}
 	case *BoolLiteral:
 		return NewBoolValue(node.Value)
+	case *NullLiteral:
+		return &NullValue{}
 	case *Identifier:
 		return evalIdentifier(node, env)
 	case *PrefixExpression:

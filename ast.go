@@ -113,6 +113,14 @@ func (b *BoolLiteral) String() string {
 	return strconv.FormatBool(b.Value)
 }
 
+type NullLiteral struct{}
+
+func (b *NullLiteral) expressionNode() {}
+
+func (b *NullLiteral) String() string {
+	return "null"
+}
+
 type PrefixExpression struct {
 	Operator string
 	Right    Expression

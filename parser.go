@@ -56,6 +56,7 @@ func NewParser(l *Lexer) *Parser {
 	p.registerPrefix(INT_TOK, p.parseIntLiteral)
 	p.registerPrefix(TRUE_TOK, p.parseBoolLiteral)
 	p.registerPrefix(FALSE_TOK, p.parseBoolLiteral)
+	p.registerPrefix(NULL_TOK, p.parseNullLiteral)
 	p.registerPrefix(MINUS_TOK, p.parsePrefixExpression)
 	p.registerPrefix(BANG_TOK, p.parsePrefixExpression)
 	p.registerPrefix(LPAREN_TOK, p.parseGroupedExpression)
@@ -141,24 +142,40 @@ func (p *Parser) peekPrecedence() int {
 func (p *Parser) ParseProgram() *Program {
 	program := &Program{}
 	program.Statements = []Statement{}
+	hasEndSemicolon := true
 
 	for !p.isCurToken(EOF_TOK) {
-		stmt := p.parseStatement()
+		stmt, hasSemicolon := p.parseStatement()
 		if stmt != nil {
 			program.Statements = append(program.Statements, stmt)
 		}
+
+		if !hasSemicolon {
+			if !p.isPeekToken(EOF_TOK) {
+				p.expectPeek(SEMICOLON_TOK)
+				return nil
+			} else {
+				hasEndSemicolon = false
+			}
+		}
+
 		p.nextToken()
+	}
+
+	if hasEndSemicolon {
+		program.Statements = append(program.Statements, &ExprStatement{Value: &NullLiteral{}})
 	}
 
 	return program
 }
 
-func (p *Parser) parseStatement() Statement {
+// returns statement and if it ends with a semicolon
+func (p *Parser) parseStatement() (Statement, bool) {
 	switch p.curToken.Type {
 	case LET_TOK:
-		return p.parseLetStatement()
+		return p.parseLetStatement(), true
 	case RETURN_TOK:
-		return p.parseReturnStatement()
+		return p.parseReturnStatement(), true
 	default:
 		return p.parseExprStatement()
 	}
@@ -199,15 +216,17 @@ func (p *Parser) parseReturnStatement() *ReturnStatement {
 	return stmt
 }
 
-func (p *Parser) parseExprStatement() *ExprStatement {
+// returns statement and if it ends with a semicolon
+func (p *Parser) parseExprStatement() (*ExprStatement, bool) {
 	stmt := &ExprStatement{}
 	stmt.Value = p.parseExpression(LOWEST_P)
 
-	if p.isPeekToken(SEMICOLON_TOK) {
+	hasSemicolon := p.isPeekToken(SEMICOLON_TOK)
+	if hasSemicolon {
 		p.nextToken()
 	}
 
-	return stmt
+	return stmt, hasSemicolon
 }
 
 func (p *Parser) parseExpression(precedence int) Expression {
@@ -251,6 +270,10 @@ func (p *Parser) parseIntLiteral() Expression {
 
 func (p *Parser) parseBoolLiteral() Expression {
 	return &BoolLiteral{Value: p.isCurToken(TRUE_TOK)}
+}
+
+func (p *Parser) parseNullLiteral() Expression {
+	return &NullLiteral{}
 }
 
 func (p *Parser) parsePrefixExpression() Expression {
