@@ -61,6 +61,7 @@ func NewParser(l *Lexer) *Parser {
 	p.registerPrefix(BANG_TOK, p.parsePrefixExpression)
 	p.registerPrefix(LPAREN_TOK, p.parseGroupedExpression)
 	p.registerPrefix(FN_TOK, p.parseFnLiteral)
+	p.registerPrefix(STRING_TOK, p.parseStringLiteral)
 
 	p.infixParseFns = make(map[TokenType]InfixParseFn)
 	p.registerInfix(EQUAL_TOK, p.parseInfixExpression)
@@ -441,4 +442,8 @@ func (p *Parser) parseFnParams() []*Identifier {
 	}
 
 	return params
+}
+
+func (p *Parser) parseStringLiteral() Expression {
+	return &StringLiteral{Value: p.curToken.Literal}
 }

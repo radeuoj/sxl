@@ -10,12 +10,14 @@ import (
 type ValueType string
 
 const (
-	INT_VAL_T    = "int"
-	BOOL_VAL_T   = "bool"
-	NULL_VAL_T   = "null"
-	ERROR_VAL_T  = "error"
-	FN_VAL_T     = "fn"
-	RETURN_VAL_T = "return"
+	INT_VAL_T      = "int"
+	BOOL_VAL_T     = "bool"
+	NULL_VAL_T     = "null"
+	ERROR_VAL_T    = "error"
+	FN_VAL_T       = "fn"
+	RETURN_VAL_T   = "return"
+	STRING_VAL_T   = "string"
+	BUILTIN_FN_VAL = "builtin fn"
 )
 
 var (
@@ -143,4 +145,32 @@ func unwrapReturnValue(val Value) Value {
 	} else {
 		return val
 	}
+}
+
+type StringValue struct {
+	Value string
+}
+
+func (v *StringValue) Type() ValueType {
+	return STRING_VAL_T
+}
+
+func (v *StringValue) Inspect() string {
+	return v.Value
+}
+
+func NewStringValue(val string) *StringValue {
+	return &StringValue{Value: val}
+}
+
+type BuiltinFnValue struct {
+	Fn func(args ...Value) Value
+}
+
+func (v *BuiltinFnValue) Type() ValueType {
+	return BUILTIN_FN_VAL
+}
+
+func (v *BuiltinFnValue) Inspect() string {
+	return "builtin fn"
 }

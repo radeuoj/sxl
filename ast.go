@@ -86,7 +86,7 @@ func (s *BlockStatement) String() string {
 	for _, s := range s.Statements {
 		out.WriteString(s.String())
 	}
-	out.WriteString("}\n")
+	out.WriteString("}")
 
 	return out.String()
 }
@@ -270,4 +270,14 @@ func (e *FnLiteral) String() string {
 	out.WriteString(e.Body.String())
 
 	return out.String()
+}
+
+type StringLiteral struct {
+	Value string
+}
+
+func (e *StringLiteral) expressionNode() {}
+
+func (e *StringLiteral) String() string {
+	return "\"" + e.Value + "\""
 }

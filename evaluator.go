@@ -1,5 +1,28 @@
 package main
 
+import "fmt"
+
+var builtins = map[string]*BuiltinFnValue{
+	"echo": &BuiltinFnValue{
+		Fn: func(args ...Value) Value {
+			if len(args) != 1 {
+				return NewErrorValue("wrong number of arguments: wanted 1, got %d", len(args))
+			}
+
+			return args[0]
+		},
+	},
+	"inspect": &BuiltinFnValue{
+		Fn: func(args ...Value) Value {
+			for _, arg := range args {
+				fmt.Println(arg.Inspect())
+			}
+
+			return NULL_VAL
+		},
+	},
+}
+
 func Eval(node Node, env *Environment) Value {
 	switch node := node.(type) {
 	case *Program:
@@ -27,6 +50,8 @@ func Eval(node Node, env *Environment) Value {
 		return evalIdentifier(node, env)
 	case *FnLiteral:
 		return &FnValue{Params: node.Params, Body: node.Body, Env: env}
+	case *StringLiteral:
+		return &StringValue{Value: node.Value}
 	case *PrefixExpression:
 		right := Eval(node.Right, env)
 		if IsError(right) {
@@ -128,18 +153,20 @@ func evalExpressions(exprs []Expression, env *Environment) []Value {
 }
 
 func evalCall(fn Value, args []Value) Value {
-	fnVal, ok := fn.(*FnValue)
-	if !ok {
+	switch fn := fn.(type) {
+	case *FnValue:
+		if len(args) != len(fn.Params) {
+			return NewErrorValue("wrong number of arguments: wanted %d, got %d", len(fn.Params), len(args))
+		}
+
+		env := extendFnEnv(fn, args)
+		val := evalStatements(fn.Body.Statements, env)
+		return unwrapReturnValue(val)
+	case *BuiltinFnValue:
+		return fn.Fn(args...)
+	default:
 		return NewErrorValue("%s is not a function", fn.Type())
 	}
-
-	if len(args) != len(fnVal.Params) {
-		return NewErrorValue("invalid number of arguments: wanted %d, got %d", len(fnVal.Params), len(args))
-	}
-
-	env := extendFnEnv(fnVal, args)
-	val := evalStatements(fnVal.Body.Statements, env)
-	return unwrapReturnValue(val)
 }
 
 func extendFnEnv(fn *FnValue, args []Value) *Environment {
@@ -153,12 +180,15 @@ func extendFnEnv(fn *FnValue, args []Value) *Environment {
 }
 
 func evalIdentifier(ident *Identifier, env *Environment) Value {
-	val, ok := env.Get(ident.Value)
-	if !ok {
-		return NewErrorValue("identifier not found: %s", ident.Value)
+	if val, ok := env.Get(ident.Value); ok {
+		return val
 	}
 
-	return val
+	if val, ok := builtins[ident.Value]; ok {
+		return val
+	}
+
+	return NewErrorValue("identifier not found: %s", ident.Value)
 }
 
 func evalPrefixExpression(operator string, right Value) Value {
@@ -197,6 +227,8 @@ func evalInfixExpression(operator string, left, right Value) Value {
 		return evalIntInfixExpression(operator, left.(*IntValue), right.(*IntValue))
 	} else if left.Type() == BOOL_VAL_T && right.Type() == BOOL_VAL_T {
 		return evalBoolInfixExpression(operator, left.(*BoolValue), right.(*BoolValue))
+	} else if left.Type() == STRING_VAL_T && right.Type() == STRING_VAL_T {
+		return evalStringInfixExpression(operator, left.(*StringValue), right.(*StringValue))
 	} else {
 		return NewErrorValue("types mismatch %s %s %s", left.Type(), operator, right.Type())
 	}
@@ -240,6 +272,15 @@ func evalBoolInfixExpression(operator string, left, right *BoolValue) Value {
 		return NewBoolValue(left != right)
 	default:
 		return NewErrorValue("type bool is incompatible with %s operator", operator)
+	}
+}
+
+func evalStringInfixExpression(operator string, left, right *StringValue) Value {
+	switch operator {
+	case "+":
+		return NewStringValue(left.Value + right.Value)
+	default:
+		return NewErrorValue("type string is incompatible with %s operator", operator)
 	}
 }
 

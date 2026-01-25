@@ -95,6 +95,13 @@ func (l *Lexer) NextToken() Token {
 		tok = NewToken(LBRACE_TOK, l.ch)
 	case '}':
 		tok = NewToken(RBRACE_TOK, l.ch)
+	case '"':
+		tok.Type = STRING_TOK
+		tok.Literal = l.readString()
+
+		if l.ch == 0 {
+			return NewToken(ILLEGAL_TOK, '"')
+		}
 	case 0:
 		tok = NewToken(EOF_TOK, 0)
 	default:
@@ -155,4 +162,17 @@ func isIdentChar(ch byte) bool {
 
 func isDigit(ch byte) bool {
 	return '0' <= ch && ch <= '9'
+}
+
+func (l *Lexer) readString() string {
+	pos := l.pos + 1
+
+	for {
+		l.readChar()
+		if l.ch == '"' || l.ch == 0 {
+			break
+		}
+	}
+
+	return l.input[pos:l.pos]
 }

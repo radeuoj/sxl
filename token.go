@@ -11,8 +11,9 @@ const (
 	ILLEGAL_TOK = "ILLEGAL"
 	EOF_TOK     = "EOF"
 
-	IDENT_TOK = "IDENT"
-	INT_TOK   = "INT"
+	IDENT_TOK  = "IDENT"
+	INT_TOK    = "INT"
+	STRING_TOK = "STRING"
 
 	ASSIGN_TOK    = "="
 	PLUS_TOK      = "+"

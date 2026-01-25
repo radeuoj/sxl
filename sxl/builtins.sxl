@@ -1,0 +1,5 @@
+inspect("Salut world");
+inspect(echo(12345));
+inspect(fn(a, b) { a + b; });
+let greeting = "Hello world";
+inspect(greeting, "again");
