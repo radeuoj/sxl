@@ -7,7 +7,7 @@ func Eval(node Node, env *Environment) Value {
 	case *LetStatement:
 		return evalLetStatement(node, env)
 	case *BlockStatement:
-		return evalStatements(node.Statements, env)
+		return evalStatements(node.Statements, env.NewChild())
 	case *IfStatement:
 		return evalIfStatement(node, env)
 	case *ReturnStatement:
@@ -133,7 +133,7 @@ func evalCall(fn Value, args []Value) Value {
 	}
 
 	env := extendFnEnv(fnVal, args)
-	val := Eval(fnVal.Body, env)
+	val := evalStatements(fnVal.Body.Statements, env)
 	return unwrapReturnValue(val)
 }
 

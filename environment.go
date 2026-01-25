@@ -45,7 +45,7 @@ func (e *Environment) Assign(name string, val Value) bool {
 		e.store[name] = val
 		return true
 	} else if e.parent != nil {
-		return e.Assign(name, val)
+		return e.parent.Assign(name, val)
 	} else {
 		return false
 	}
