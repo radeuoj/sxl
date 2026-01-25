@@ -125,6 +125,31 @@ func (s *ExprStatement) String() string {
 	return s.Value.String() + ";\n"
 }
 
+type FnStatement struct {
+	Name  *Identifier
+	Value *FnLiteral
+}
+
+func (s *FnStatement) statementNode() {}
+
+func (s *FnStatement) String() string {
+	var out bytes.Buffer
+
+	params := []string{}
+	for _, p := range s.Value.Params {
+		params = append(params, p.String())
+	}
+
+	out.WriteString("fn ")
+	out.WriteString(s.Name.Value)
+	out.WriteString("(")
+	out.WriteString(strings.Join(params, ", "))
+	out.WriteString(") ")
+	out.WriteString(s.Value.Body.String())
+
+	return out.String()
+}
+
 type Identifier struct {
 	Value string
 }

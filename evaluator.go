@@ -12,6 +12,9 @@ func Eval(node Node, env *Environment) Value {
 		return evalIfStatement(node, env)
 	case *ReturnStatement:
 		return &ReturnValue{Value: Eval(node.Value, env)}
+	case *FnStatement:
+		stmt := &LetStatement{Name: node.Name, Value: node.Value}
+		return evalLetStatement(stmt, env)
 	case *ExprStatement:
 		return Eval(node.Value, env)
 	case *IntLiteral:
@@ -84,6 +87,8 @@ func evalStatements(stmts []Statement, env *Environment) Value {
 		res = Eval(stmt, env)
 
 		switch res := res.(type) {
+		case *ReturnValue:
+			return res
 		case *ErrorValue:
 			return res
 		}

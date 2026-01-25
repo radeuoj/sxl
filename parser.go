@@ -167,6 +167,8 @@ func (p *Parser) parseStatement() Statement {
 		return p.parseBlockStatement()
 	case IF_TOK:
 		return p.parseIfStatement()
+	case FN_TOK:
+		return p.parseFnStatement()
 	default:
 		return p.parseExprStatement()
 	}
@@ -243,6 +245,32 @@ func (p *Parser) parseIfStatement() *IfStatement {
 		}
 	}
 
+	return stmt
+}
+
+func (p *Parser) parseFnStatement() *FnStatement {
+	stmt := &FnStatement{}
+	lit := &FnLiteral{}
+
+	if !p.expectPeek(IDENT_TOK) {
+		return nil
+	}
+
+	stmt.Name = &Identifier{Value: p.curToken.Literal}
+
+	if !p.expectPeek(LPAREN_TOK) {
+		return nil
+	}
+
+	lit.Params = p.parseFnParams()
+
+	if !p.expectPeek(LBRACE_TOK) {
+		return nil
+	}
+
+	lit.Body = p.parseBlockStatement()
+
+	stmt.Value = lit
 	return stmt
 }
 
