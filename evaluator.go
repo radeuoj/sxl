@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"bytes"
+	"fmt"
+)
 
 var builtins = map[string]*BuiltinFnValue{
 	"echo": &BuiltinFnValue{
@@ -18,6 +21,32 @@ var builtins = map[string]*BuiltinFnValue{
 				fmt.Println(arg.Inspect())
 			}
 
+			return NULL_VAL
+		},
+	},
+	"println": &BuiltinFnValue{
+		Fn: func(args ...Value) Value {
+			if len(args) < 1 || args[0].Type() != STRING_VAL_T {
+				return NewErrorValue("println expects at least one argument of type string")
+			}
+
+			input := args[0].(*StringValue).Value
+			argInd := 1
+			var res bytes.Buffer
+			for i := 0; i < len(input); i++ {
+				if input[i] == '{' && input[i+1] == '}' {
+					if argInd >= len(args) {
+						return NewErrorValue("println expects more arguments")
+					}
+					i++
+					res.WriteString(args[argInd].Inspect())
+					argInd++
+				} else {
+					res.WriteByte(input[i])
+				}
+			}
+
+			fmt.Println(res.String())
 			return NULL_VAL
 		},
 	},

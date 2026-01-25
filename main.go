@@ -23,7 +23,11 @@ func evalFile(path string) {
 	}
 
 	env := NewEnvironemnt()
-	Eval(program, env)
+	val := Eval(program, env)
+
+	if val.Type() == ERROR_VAL_T {
+		fmt.Println(val.Inspect())
+	}
 }
 
 func parseFile(path string) (program *Program, errors []string) {
