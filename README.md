@@ -52,8 +52,8 @@ fn hello(who) {
     "Hello " + who;
 }
 
-hello("world");
-hello("Marcus");
+println(hello("world"));
+println(hello("Marcus"));
 ```
 
 ## How to run a file
