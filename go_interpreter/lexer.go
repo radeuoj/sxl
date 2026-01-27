@@ -78,7 +78,7 @@ func (l *Lexer) NextToken() Token {
 	case '!':
 		if l.peekChar() == '=' {
 			l.readChar()
-			tok.Type = EQUAL_TOK
+			tok.Type = NOT_EQUAL_TOK
 			tok.Literal = "!="
 		} else {
 			tok = NewToken(BANG_TOK, l.ch)

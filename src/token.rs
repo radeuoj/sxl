@@ -1,9 +1,10 @@
+#[derive(Debug, Clone, PartialEq)]
 pub enum Token {
     Illegal,
     Eof,
 
-    Ident(String),
-    Int(String),
+    Ident(Vec<u8>),
+    Int(Vec<u8>),
 
     Assign,
     Plus,
@@ -19,6 +20,7 @@ pub enum Token {
     Gte,
 
     Comma,
+    Colon,
     Semicolon,
 
     LParen,
@@ -36,17 +38,17 @@ pub enum Token {
 }
 
 impl Token {
-    pub fn from_symbol(symbol: &str) -> Self {
+    pub fn from_symbol(symbol: &[u8]) -> Self {
         use Token::*;
         match symbol {
-            "let" => Let,
-            "fn" => Fn,
-            "if" => If,
-            "else" => Else,
-            "return" => Return,
-            "true" => True,
-            "false" => False,
-            _ => Ident(symbol.to_string()),
+            b"let" => Let,
+            b"fn" => Fn,
+            b"if" => If,
+            b"else" => Else,
+            b"return" => Return,
+            b"true" => True,
+            b"false" => False,
+            _ => Ident(symbol.to_vec()),
         }
     }
 }
