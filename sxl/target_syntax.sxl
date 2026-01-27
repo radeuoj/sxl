@@ -1,0 +1,8 @@
+fn fib(n: int32) -> int32 {
+    if n <= 1 { return n; }
+    return fib(n - 2) + fib(n - 1);
+}
+
+fn main() {
+    inspect(fib(35));
+}
