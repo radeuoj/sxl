@@ -52,3 +52,49 @@ impl Token {
         }
     }
 }
+
+impl std::fmt::Display for Token {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        use Token::*;
+
+        let res = match self {
+            Illegal => "<illegal>",
+            Eof => "<eof>",
+
+            Ident(name) => str::from_utf8(name).unwrap(),
+            Int(lit) => str::from_utf8(lit).unwrap(),
+
+            Assign => "=",
+            Plus => "+",
+            Minus => "-",
+            Asterisk => "*",
+            Slash => "/",
+            Bang => "!",
+            Equal => "==",
+            NotEqual => "!=",
+            Lt => "<",
+            Gt => ">",
+            Lte => "<=",
+            Gte => ">=",
+
+            Comma => ",",
+            Colon => ":",
+            Semicolon => ";",
+
+            LParen => "(",
+            RParen => ")",
+            LBrace => "{",
+            RBrace => "}",
+
+            Let => "let",
+            Fn => "fn",
+            If => "if",
+            Else => "else",
+            Return => "return",
+            True => "true",
+            False => "false",
+        };
+
+        write!(f, "{}", res)
+    }
+}

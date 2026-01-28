@@ -27,7 +27,7 @@ impl Lexer {
         self.pos -= 1;
     }
 
-    fn next_token(&mut self) -> Token {
+    pub fn next_token(&mut self) -> Token {
         self.skip_whitespace();
         use Token::*;
 
@@ -138,14 +138,14 @@ impl Lexer {
 
 #[cfg(test)]
 mod tests {
-    use crate::lexer::Lexer;
+    use super::*;
 
     #[test]
     fn test_lexer() {
         let input = b"let a: int32 = b + c * (12 - _radu); // this is a comment
             return a + b;";
 
-        use crate::token::Token::*;
+        use Token::*;
         let ok = vec![
             Let,
             Ident(b"a".to_vec()),
