@@ -5,7 +5,6 @@ mod token;
 
 use lexer::Lexer;
 use parser::Parser;
-use parser::BindingPower;
 use std::io::Write;
 
 fn main() -> anyhow::Result<()> {
@@ -20,6 +19,10 @@ fn main() -> anyhow::Result<()> {
 
         let lexer = Lexer::new(buffer.into_bytes());
         let mut parser = Parser::new(lexer);
-        println!("{}", parser.parse_expression(BindingPower::Lowest)?);
+
+        match parser.parse_statement() {
+            Ok(expr) => println!("{expr}"),
+            Err(err) => eprintln!("{err}"),
+        };
     }
 }
