@@ -1,8 +1,6 @@
-use std::fmt::LowerExp;
-
+use std::io::Write;
 use anyhow::bail;
-
-use crate::{ast::{Expression, Statement}, lexer::Lexer, token::Token};
+use crate::{ast::{Expression, Statement, Program}, lexer::Lexer, token::Token};
 
 pub struct Parser {
     lexer: Lexer,
@@ -113,7 +111,7 @@ impl Parser {
         })
     }
 
-    pub fn parse_statement(&mut self) -> anyhow::Result<Statement> {
+    fn parse_statement(&mut self) -> anyhow::Result<Statement> {
         let res = match self.peek_token {
             Token::Let => {
                 self.next_token(); // let
@@ -140,6 +138,42 @@ impl Parser {
         self.expect_peek(&Token::Semicolon)?;
 
         Ok(res)
+    }
+
+    pub fn parse_program(&mut self) -> anyhow::Result<Program> {
+        let mut body = Vec::new();
+        let mut errs = Vec::new();
+
+        while self.peek_token != Token::Eof {
+            match self.parse_statement() {
+                Ok(stmt) => body.push(stmt),
+                Err(err) => errs.push(err),
+            }
+        }
+
+        if !errs.is_empty() { anyhow::bail!(format!("{:?}", errs)) }
+        Ok(Program { body })
+    }
+}
+
+#[allow(unused)]
+pub fn repl() {
+    println!("Welcome to temporary REPL");
+
+    loop {
+        print!("> ");
+        std::io::stdout().flush().unwrap();
+
+        let mut buffer = String::new();
+        std::io::stdin().read_line(&mut buffer).unwrap();
+
+        let lexer = Lexer::new(buffer.into_bytes());
+        let mut parser = Parser::new(lexer);
+
+        match parser.parse_statement() {
+            Ok(expr) => println!("{expr}"),
+            Err(err) => eprintln!("{err}"),
+        };
     }
 }
 

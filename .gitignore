@@ -1,2 +1,6 @@
 /go_interpreter/sxl.exe
 /target
+
+/test.sxl
+/test.c
+/test.exe

@@ -1,28 +1,31 @@
+use std::process::Command;
+
+use crate::{compiler::Compiler, lexer::Lexer, parser::Parser};
+
 mod ast;
+mod compiler;
 mod lexer;
 mod parser;
 mod token;
 
-use lexer::Lexer;
-use parser::Parser;
-use std::io::Write;
-
 fn main() -> anyhow::Result<()> {
-    println!("Welcome to temporary REPL");
+    let input = std::fs::read("test.sxl")?;
+    let lexer = Lexer::new(input);
+    let mut parser = Parser::new(lexer);
+    let program = parser.parse_program()?;
+    let compiler = Compiler::new();
+    let output = compiler.compile_program(program);
+    std::fs::write("test.c", output)?;
 
-    loop {
-        print!("> ");
-        std::io::stdout().flush()?;
+    Command::new("clang")
+        .args(["-o", "test.exe", "test.c"])
+        .spawn()?
+        .wait()?;
 
-        let mut buffer = String::new();
-        std::io::stdin().read_line(&mut buffer)?;
+    let path = std::env::current_dir()?;
+    Command::new(path.join("test.exe"))
+        .spawn()?
+        .wait()?;
 
-        let lexer = Lexer::new(buffer.into_bytes());
-        let mut parser = Parser::new(lexer);
-
-        match parser.parse_statement() {
-            Ok(expr) => println!("{expr}"),
-            Err(err) => eprintln!("{err}"),
-        };
-    }
+    Ok(())
 }

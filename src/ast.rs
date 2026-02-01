@@ -29,7 +29,7 @@ impl std::fmt::Display for Expression {
 
         let res = match self {
             Ident { value } => String::from_utf8(value.to_vec()).unwrap(),
-            Int { value } => format!("{value}"),
+            Int { value } => value.to_string(),
             Unary { op, right } => format!("({op}{right})"),
             Binary { op, left, right } => format!("({left} {op} {right})"),
             Call { func, args } => format!("{func}({})", args
@@ -71,4 +71,8 @@ impl std::fmt::Display for Statement  {
 
         write!(f, "{res}")
     }
+}
+
+pub struct Program {
+    pub body: Vec<Statement>
 }
