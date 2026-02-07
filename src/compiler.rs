@@ -12,18 +12,15 @@ impl Compiler {
     pub fn compile_program(&self, program: Program) -> String {
         format!(r#"// compiled from SXL
 #include <stdio.h>
-typedef const char* ccp;
+typedef const char* str;
 
 int main() {{
-    int res;
-    {}
-
-    printf("%d\n", res);
+{}
 }}
-            "#, program.body.iter().fold(String::new(),
-                |acc, stmt| format!("{acc}\n{}",
-                    &self.compile_statement(stmt, 1))
-            )
+            "#, program.body.iter()
+                .map(|stmt| self.compile_statement(stmt, 1))
+                .reduce(|acc, stmt| format!("{acc}\n{stmt}"))
+                .unwrap_or_default()
         )
     }
 
@@ -42,16 +39,29 @@ int main() {{
                             vtype, name),
                     }
                 }
+                Return { value } => format!("return {};",
+                    self.compile_expression(value)),
+                If { cond, then, else_then } => format!("if ({}) {{\n{}\n{indent_str}}} {}",
+                    self.compile_expression(cond),
+                    self.compile_statements(then.unwrap_block().unwrap(), indent + 1),
+                    match else_then {
+                        Some(else_then) => format!("else {{\n{}\n{indent_str}}}",
+                            self.compile_statements(else_then.unwrap_block().unwrap(), indent + 1)),
+                        None => "".to_string(),
+                    }),
                 Expression { value } => format!("{};",
                     self.compile_expression(&value)),
-                Block { body } => format!("{{\n{}\n{indent_str}}}", body
-                    .iter()
-                    .map(|stmt| self.compile_statement(stmt, indent + 1))
-                    .reduce(|acc, stmt| format!("{acc}\n{stmt}"))
-                    .unwrap_or_default()),
-                _ => todo!(),
+                Block { body } => format!("{{\n{}\n{indent_str}}}",
+                    self.compile_statements(body, indent + 1)),
             }
         )
+    }
+
+    fn compile_statements(&self, stmts: &[Statement], indent: i32) -> String {
+        stmts.iter()
+            .map(|stmt| self.compile_statement(stmt, indent))
+            .reduce(|acc, stmt| format!("{acc}\n{stmt}"))
+            .unwrap_or_default()
     }
 
     fn compile_expression(&self, expr: &Expression) -> String {

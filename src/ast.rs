@@ -1,3 +1,5 @@
+use anyhow::bail;
+
 use crate::token::Token;
 
 #[derive(Debug, PartialEq)]
@@ -51,8 +53,18 @@ impl std::fmt::Display for Expression {
 pub enum Statement {
     Let { name: String, vtype: String, value: Option<Expression> },
     Return { value: Expression },
+    If { cond: Expression, then: Box<Statement>, else_then: Option<Box<Statement>> },
     Expression { value: Expression },
     Block { body: Vec<Statement> },
+}
+
+impl Statement {
+    pub fn unwrap_block(&self) -> anyhow::Result<&[Statement]> {
+        match self {
+            Statement::Block { body } => Ok(body),
+            stmt => bail!("{stmt} is not block"),
+        }
+    }
 }
 
 impl std::fmt::Display for Statement  {
@@ -69,6 +81,11 @@ impl std::fmt::Display for Statement  {
                 }
             }
             Return { value } => format!("return {value};"),
+            If { cond, then, else_then } => format!("if {} {} {}",
+                cond, then, match else_then {
+                    Some(else_then) => format!("else {}", else_then),
+                    None => "".to_string(),
+                }),
             Expression { value } => format!("{value};"),
             Block { body } => format!("{{\n{}\n}}", body
                 .iter()

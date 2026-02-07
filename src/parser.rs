@@ -159,28 +159,30 @@ impl Parser {
 
                 Statement::Let { name, vtype, value }
             }
-            Token::LBrace => {
-                self.next_token()?; // {
-                let mut body = vec![];
-                let mut errs = vec![];
-
-                while ![Token::Eof, Token::RBrace].contains(&self.peek_token) {
-                    match self.parse_statement() {
-                        Ok(stmt) => body.push(stmt),
-                        Err(err) => errs.push(err),
-                    }
-                }
-
-                if let Err(err) = self.expect_peek(&Token::RBrace) {
-                    errs.push(err);
-                }
-
-                if errs.is_empty() {
-                    return Ok(Statement::Block { body });
-                } else {
-                    bail!("{:?}", errs);
-                }
+            Token::Return => {
+                self.next_token()?; // return
+                let value = self.parse_expression(BindingPower::Lowest)?;
+                Statement::Return { value }
             }
+            Token::If => {
+                self.next_token()?; // if
+                let cond = self.parse_expression(BindingPower::Lowest)?;
+                let then = self.parse_block_statement()?;
+
+                let else_then = if self.peek_token == Token::Else {
+                    self.next_token()?;
+                    Some(self.parse_block_statement()?)
+                } else {
+                    None
+                };
+
+                return Ok(Statement::If {
+                    cond,
+                    then: then.into(),
+                    else_then: else_then.map(Box::new),
+                });
+            }
+            Token::LBrace => self.parse_block_statement()?,
             _ => Statement::Expression {
                 value: self.parse_expression(BindingPower::Lowest)?
             },
@@ -189,6 +191,29 @@ impl Parser {
         self.expect_peek(&Token::Semicolon)?;
 
         Ok(res)
+    }
+
+    fn parse_block_statement(&mut self) -> anyhow::Result<Statement> {
+        self.expect_peek(&Token::LBrace)?;
+        let mut body = vec![];
+        let mut errs = vec![];
+
+        while ![Token::Eof, Token::RBrace].contains(&self.peek_token) {
+            match self.parse_statement() {
+                Ok(stmt) => body.push(stmt),
+                Err(err) => errs.push(err),
+            }
+        }
+
+        if let Err(err) = self.expect_peek(&Token::RBrace) {
+            errs.push(err);
+        }
+
+        if errs.is_empty() {
+            Ok(Statement::Block { body })
+        } else {
+            bail!("{:?}", errs)
+        }
     }
 
     pub fn parse_program(&mut self) -> anyhow::Result<Program> {
