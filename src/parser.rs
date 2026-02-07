@@ -80,6 +80,7 @@ impl Parser {
                 | Token::Gt | Token::Gte | Token::Plus | Token::Minus
                 | Token::Asterisk | Token::Slash
                 | Token::Assign => self.parse_binary_expression(left)?,
+                Token::LParen => self.parse_call_expression(left)?,
                 _ => return Ok(left),
             }
         }
@@ -110,6 +111,33 @@ impl Parser {
             left: Box::new(left),
             right: Box::new(right),
         })
+    }
+
+    fn parse_call_expression(&mut self, left: Expression) -> anyhow::Result<Expression> {
+        Ok(Expression::Call {
+            func: left.into(),
+            args: self.parse_call_arguments()?,
+        })
+    }
+
+    fn parse_call_arguments(&mut self) -> anyhow::Result<Vec<Expression>> {
+        self.next_token()?; // (
+        let mut args = vec![];
+
+        if self.peek_token == Token::RParen {
+            self.next_token()?;
+            return Ok(args);
+        }
+
+        loop {
+            args.push(self.parse_expression(BindingPower::Lowest)?);
+            if self.peek_token != Token::Comma { break; }
+            self.next_token()?;
+        }
+
+        self.expect_peek(&Token::RParen)?;
+
+        Ok(args)
     }
 
     fn parse_statement(&mut self) -> anyhow::Result<Statement> {

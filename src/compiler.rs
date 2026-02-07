@@ -66,12 +66,12 @@ int main() {{
             Binary { op, left, right } => format!("{} {op} {}",
                 self.compile_expression(&left),
                 self.compile_expression(&right)),
-            _ => todo!(),
-            // Call { func, args } => format!("{func}({})", args
-            //     .iter()
-            //     .map(|arg| format!("{arg}"))
-            //     .reduce(|acc, s| format!("{acc}, {s}"))
-            //     .unwrap_or_default())
+            Call { func, args } => format!("{}({})",
+                self.compile_expression(func),
+                args.iter()
+                    .map(|arg| self.compile_expression(arg))
+                    .reduce(|acc, s| format!("{acc}, {s}"))
+                    .unwrap_or_default()),
         }
     }
 }
