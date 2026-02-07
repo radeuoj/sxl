@@ -11,7 +11,7 @@ mod token;
 fn main() -> anyhow::Result<()> {
     let input = std::fs::read("test.sxl")?;
     let lexer = Lexer::new(input);
-    let mut parser = Parser::new(lexer);
+    let mut parser = Parser::new(lexer)?;
     let program = parser.parse_program()?;
     let compiler = Compiler::new();
     let output = compiler.compile_program(program);

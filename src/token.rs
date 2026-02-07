@@ -3,8 +3,9 @@ pub enum Token {
     Illegal,
     Eof,
 
-    Ident(Vec<u8>),
-    Int(Vec<u8>),
+    Ident(String),
+    Int(String),
+    String(String),
 
     Assign,
     Plus,
@@ -38,17 +39,17 @@ pub enum Token {
 }
 
 impl Token {
-    pub fn from_symbol(symbol: &[u8]) -> Self {
+    pub fn from_symbol(symbol: &str) -> Self {
         use Token::*;
         match symbol {
-            b"let" => Let,
-            b"fn" => Fn,
-            b"if" => If,
-            b"else" => Else,
-            b"return" => Return,
-            b"true" => True,
-            b"false" => False,
-            _ => Ident(symbol.to_vec()),
+            "let" => Let,
+            "fn" => Fn,
+            "if" => If,
+            "else" => Else,
+            "return" => Return,
+            "true" => True,
+            "false" => False,
+            _ => Ident(symbol.to_string()),
         }
     }
 }
@@ -61,8 +62,9 @@ impl std::fmt::Display for Token {
             Illegal => "<illegal>",
             Eof => "<eof>",
 
-            Ident(name) => str::from_utf8(name).unwrap(),
-            Int(lit) => str::from_utf8(lit).unwrap(),
+            Ident(name) => name,
+            Int(lit) => lit,
+            String(lit) => &format!("\"{lit}\""),
 
             Assign => "=",
             Plus => "+",

@@ -12,6 +12,7 @@ impl Compiler {
     pub fn compile_program(&self, program: Program) -> String {
         format!(r#"// compiled from SXL
 #include <stdio.h>
+typedef const char* ccp;
 
 int main() {{
     int res;
@@ -35,12 +36,10 @@ int main() {{
             match stmt {
                 Let { name, vtype, value } => {
                     match value {
-                        Some(value) => format!("{} {} = {value};",
-                            str::from_utf8(vtype).unwrap(),
-                            str::from_utf8(name).unwrap()),
+                        Some(value) => format!("{} {} = {};",
+                            vtype, name, self.compile_expression(value)),
                         None => format!("{} {};",
-                            str::from_utf8(vtype).unwrap(),
-                            str::from_utf8(name).unwrap()),
+                            vtype, name),
                     }
                 }
                 Expression { value } => format!("{};",
@@ -59,8 +58,9 @@ int main() {{
         use Expression::*;
 
         match expr {
-            Ident { value } => String::from_utf8(value.to_vec()).unwrap(),
+            Ident { value } => value.to_string(),
             Int { value } => value.to_string(),
+            String { value } => format!("\"{value}\""),
             Unary { op, right } => format!("{op}{}",
                 self.compile_expression(&right)),
             Binary { op, left, right } => format!("{} {op} {}",

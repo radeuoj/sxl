@@ -3,10 +3,13 @@ use crate::token::Token;
 #[derive(Debug, PartialEq)]
 pub enum Expression {
     Ident {
-        value: Vec<u8>,
+        value: String,
     },
     Int {
         value: i32,
+    },
+    String {
+        value: String,
     },
     Unary {
         op: Token,
@@ -28,8 +31,9 @@ impl std::fmt::Display for Expression {
         use Expression::*;
 
         let res = match self {
-            Ident { value } => String::from_utf8(value.to_vec()).unwrap(),
+            Ident { value } => value.to_string(),
             Int { value } => value.to_string(),
+            String { value } => format!("\"{value}\""),
             Unary { op, right } => format!("({op}{right})"),
             Binary { op, left, right } => format!("({left} {op} {right})"),
             Call { func, args } => format!("{func}({})", args
@@ -45,7 +49,7 @@ impl std::fmt::Display for Expression {
 
 #[derive(Debug, PartialEq)]
 pub enum Statement {
-    Let { name: Vec<u8>, vtype: Vec<u8>, value: Option<Expression> },
+    Let { name: String, vtype: String, value: Option<Expression> },
     Return { value: Expression },
     Expression { value: Expression },
     Block { body: Vec<Statement> },
@@ -59,11 +63,9 @@ impl std::fmt::Display for Statement  {
             Let { name, vtype, value } => {
                 match value {
                     Some(value) => format!("let {}: {} = {value};",
-                        String::from_utf8(name.to_vec()).unwrap(),
-                        String::from_utf8(vtype.to_vec()).unwrap()),
+                        name, vtype),
                     None => format!("let {}: {};",
-                        String::from_utf8(name.to_vec()).unwrap(),
-                        String::from_utf8(vtype.to_vec()).unwrap()),
+                        name, vtype),
                 }
             }
             Return { value } => format!("return {value};"),
