@@ -48,6 +48,7 @@ pub enum Statement {
     Let { name: Vec<u8>, vtype: Vec<u8>, value: Option<Expression> },
     Return { value: Expression },
     Expression { value: Expression },
+    Block { body: Vec<Statement> },
 }
 
 impl std::fmt::Display for Statement  {
@@ -67,6 +68,11 @@ impl std::fmt::Display for Statement  {
             }
             Return { value } => format!("return {value};"),
             Expression { value } => format!("{value};"),
+            Block { body } => format!("{{\n{}\n}}", body
+                .iter()
+                .map(|stmt| format!("{stmt}"))
+                .reduce(|acc, stmt| format!("{acc}\n{stmt}"))
+                .unwrap_or_default()),
         };
 
         write!(f, "{res}")

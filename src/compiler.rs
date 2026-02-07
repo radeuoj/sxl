@@ -20,30 +20,39 @@ int main() {{
     printf("%d\n", res);
 }}
             "#, program.body.iter().fold(String::new(),
-                |acc, stmt| format!("{acc}\n    {}",
-                    &self.compile_statement(stmt))
+                |acc, stmt| format!("{acc}\n{}",
+                    &self.compile_statement(stmt, 1))
             )
         )
     }
 
-    fn compile_statement(&self, stmt: &Statement) -> String {
+    fn compile_statement(&self, stmt: &Statement, indent: i32) -> String {
         use Statement::*;
 
-        match stmt {
-            Let { name, vtype, value } => {
-                match value {
-                    Some(value) => format!("{} {} = {value};",
-                        str::from_utf8(vtype).unwrap(),
-                        str::from_utf8(name).unwrap()),
-                    None => format!("{} {};",
-                        str::from_utf8(vtype).unwrap(),
-                        str::from_utf8(name).unwrap()),
+        let indent_str = "    ".repeat(indent as usize);
+        format!("{}{}",
+            indent_str,
+            match stmt {
+                Let { name, vtype, value } => {
+                    match value {
+                        Some(value) => format!("{} {} = {value};",
+                            str::from_utf8(vtype).unwrap(),
+                            str::from_utf8(name).unwrap()),
+                        None => format!("{} {};",
+                            str::from_utf8(vtype).unwrap(),
+                            str::from_utf8(name).unwrap()),
+                    }
                 }
+                Expression { value } => format!("{};",
+                    self.compile_expression(&value)),
+                Block { body } => format!("{{\n{}\n{indent_str}}}", body
+                    .iter()
+                    .map(|stmt| self.compile_statement(stmt, indent + 1))
+                    .reduce(|acc, stmt| format!("{acc}\n{stmt}"))
+                    .unwrap_or_default()),
+                _ => todo!(),
             }
-            Expression { value } => format!("{};",
-                self.compile_expression(&value)),
-            _ => todo!(),
-        }
+        )
     }
 
     fn compile_expression(&self, expr: &Expression) -> String {
@@ -57,11 +66,12 @@ int main() {{
             Binary { op, left, right } => format!("{} {op} {}",
                 self.compile_expression(&left),
                 self.compile_expression(&right)),
-            Call { func, args } => format!("{func}({})", args
-                .iter()
-                .map(|arg| format!("{arg}"))
-                .reduce(|acc, s| format!("{acc}, {s}"))
-                .unwrap_or_default())
+            _ => todo!(),
+            // Call { func, args } => format!("{func}({})", args
+            //     .iter()
+            //     .map(|arg| format!("{arg}"))
+            //     .reduce(|acc, s| format!("{acc}, {s}"))
+            //     .unwrap_or_default())
         }
     }
 }

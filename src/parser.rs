@@ -130,6 +130,28 @@ impl Parser {
 
                 Statement::Let { name, vtype, value }
             }
+            Token::LBrace => {
+                self.next_token(); // {
+                let mut body = vec![];
+                let mut errs = vec![];
+
+                while ![Token::Eof, Token::RBrace].contains(&self.peek_token) {
+                    match self.parse_statement() {
+                        Ok(stmt) => body.push(stmt),
+                        Err(err) => errs.push(err),
+                    }
+                }
+
+                if let Err(err) = self.expect_peek(&Token::RBrace) {
+                    errs.push(err);
+                }
+
+                if errs.is_empty() {
+                    return Ok(Statement::Block { body });
+                } else {
+                    bail!("{:?}", errs);
+                }
+            }
             _ => Statement::Expression {
                 value: self.parse_expression(BindingPower::Lowest)?
             },
@@ -141,8 +163,8 @@ impl Parser {
     }
 
     pub fn parse_program(&mut self) -> anyhow::Result<Program> {
-        let mut body = Vec::new();
-        let mut errs = Vec::new();
+        let mut body = vec![];
+        let mut errs = vec![];
 
         while self.peek_token != Token::Eof {
             match self.parse_statement() {
