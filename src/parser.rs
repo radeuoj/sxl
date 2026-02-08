@@ -1,6 +1,6 @@
 use std::io::Write;
 use anyhow::bail;
-use crate::{ast::{Expression, Statement, Program}, lexer::Lexer, token::Token};
+use crate::{ast::{BlockStmt, Expression, FuncParam, Program, Statement}, lexer::Lexer, token::Token};
 
 pub struct Parser {
     lexer: Lexer,
@@ -176,13 +176,19 @@ impl Parser {
                     None
                 };
 
-                return Ok(Statement::If {
-                    cond,
-                    then: then.into(),
-                    else_then: else_then.map(Box::new),
-                });
+                return Ok(Statement::If { cond, then, else_then });
             }
-            Token::LBrace => self.parse_block_statement()?,
+            Token::LBrace => return Ok(self.parse_block_statement()?.into()),
+            Token::Fn => {
+                self.next_token()?; // fn
+                let name = self.expect_ident()?;
+                let params = self.parse_func_params()?;
+                self.expect_peek(&Token::Arrow)?;
+                let vtype = self.expect_ident()?;
+                let body = self.parse_block_statement()?;
+
+                return Ok(Statement::Func { name, vtype, params, body });
+            }
             _ => Statement::Expression {
                 value: self.parse_expression(BindingPower::Lowest)?
             },
@@ -193,7 +199,7 @@ impl Parser {
         Ok(res)
     }
 
-    fn parse_block_statement(&mut self) -> anyhow::Result<Statement> {
+    fn parse_block_statement(&mut self) -> anyhow::Result<BlockStmt> {
         self.expect_peek(&Token::LBrace)?;
         let mut body = vec![];
         let mut errs = vec![];
@@ -210,10 +216,39 @@ impl Parser {
         }
 
         if errs.is_empty() {
-            Ok(Statement::Block { body })
+            Ok(BlockStmt(body))
         } else {
             bail!("{:?}", errs)
         }
+    }
+
+    fn parse_func_params(&mut self) -> anyhow::Result<Vec<FuncParam>> {
+        self.expect_peek(&Token::LParen)?;
+        let mut params = vec![];
+
+        if self.peek_token == Token::RParen {
+            self.next_token()?;
+            return Ok(params);
+        }
+
+        loop {
+            params.push(self.parse_func_param()?);
+            if self.peek_token != Token::Comma { break; }
+            self.next_token()?;
+        }
+
+        self.expect_peek(&Token::RParen)?;
+
+        Ok(params)
+    }
+
+    fn parse_func_param(&mut self) -> anyhow::Result<FuncParam> {
+        let name = self.expect_ident()?;
+
+        self.expect_peek(&Token::Colon)?;
+        let vtype = self.expect_ident()?;
+
+        Ok(FuncParam { name, vtype })
     }
 
     pub fn parse_program(&mut self) -> anyhow::Result<Program> {
@@ -247,7 +282,7 @@ pub fn repl() {
         let mut parser = Parser::new(lexer).unwrap();
 
         match parser.parse_statement() {
-            Ok(expr) => println!("{expr}"),
+            Ok(expr) => println!("{:?}", expr),
             Err(err) => eprintln!("{err}"),
         };
     }

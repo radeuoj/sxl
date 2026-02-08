@@ -23,6 +23,7 @@ pub enum Token {
     Comma,
     Colon,
     Semicolon,
+    Arrow,
 
     LParen,
     RParen,
@@ -82,6 +83,7 @@ impl std::fmt::Display for Token {
             Comma => ",",
             Colon => ":",
             Semicolon => ";",
+            Arrow => "->",
 
             LParen => "(",
             RParen => ")",

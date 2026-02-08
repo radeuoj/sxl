@@ -1,4 +1,4 @@
-use crate::{ast::{Expression, Program, Statement}};
+use crate::ast::{BlockStmt, Expression, Program, Statement};
 
 pub struct Compiler {
 
@@ -14,11 +14,9 @@ impl Compiler {
 #include <stdio.h>
 typedef const char* str;
 
-int main() {{
 {}
-}}
             "#, program.body.iter()
-                .map(|stmt| self.compile_statement(stmt, 1))
+                .map(|stmt| self.compile_statement(stmt, 0))
                 .reduce(|acc, stmt| format!("{acc}\n{stmt}"))
                 .unwrap_or_default()
         )
@@ -41,20 +39,32 @@ int main() {{
                 }
                 Return { value } => format!("return {};",
                     self.compile_expression(value)),
-                If { cond, then, else_then } => format!("if ({}) {{\n{}\n{indent_str}}} {}",
+                If { cond, then, else_then } => format!("if ({}) {} {}",
                     self.compile_expression(cond),
-                    self.compile_statements(then.unwrap_block().unwrap(), indent + 1),
+                    self.compile_block_statement(then, indent),
                     match else_then {
                         Some(else_then) => format!("else {{\n{}\n{indent_str}}}",
-                            self.compile_statements(else_then.unwrap_block().unwrap(), indent + 1)),
+                            self.compile_statements(else_then, indent + 1)),
                         None => "".to_string(),
                     }),
                 Expression { value } => format!("{};",
                     self.compile_expression(&value)),
-                Block { body } => format!("{{\n{}\n{indent_str}}}",
-                    self.compile_statements(body, indent + 1)),
+                Block { body } => self.compile_block_statement(body, indent),
+                Func { name, vtype, params, body } => format!("{} {}({}) {}",
+                    vtype, name,
+                    params.iter()
+                        .map(|param| format!("{} {}", param.vtype, param.name))
+                        .reduce(|acc, s| format!("{acc}, {s}"))
+                        .unwrap_or_default(),
+                    self.compile_block_statement(body, indent)),
             }
         )
+    }
+
+    fn compile_block_statement(&self, block: &BlockStmt, indent: i32) -> String {
+        format!("{{\n{}\n{}}}",
+            self.compile_statements(block, indent + 1),
+            "    ".repeat(indent as usize))
     }
 
     fn compile_statements(&self, stmts: &[Statement], indent: i32) -> String {

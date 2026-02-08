@@ -35,49 +35,44 @@ impl Lexer {
         use Token::*;
 
         Ok(match self.read_char() {
-            '=' => {
-                if self.peek_char() == '=' {
-                    self.read_char();
-                    Equal
-                } else {
-                    Assign
-                }
+            '=' => if self.peek_char() == '=' {
+                self.read_char();
+                Equal
+            } else {
+                Assign
             }
-            '<' => {
-                if self.peek_char() == '=' {
-                    self.read_char();
-                    Lte
-                } else {
-                    Lt
-                }
+            '<' => if self.peek_char() == '=' {
+                self.read_char();
+                Lte
+            } else {
+                Lt
             }
-            '>' => {
-                if self.peek_char() == '=' {
-                    self.read_char();
-                    Gte
-                } else {
-                    Gt
-                }
+            '>' => if self.peek_char() == '=' {
+                self.read_char();
+                Gte
+            } else {
+                Gt
             }
             '+' => Plus,
-            '-' => Minus,
-            '*' => Asterisk,
-            '/' => {
-                if self.peek_char() == '/' {
-                    self.read_char();
-                    self.skip_comment();
-                    self.next_token()?
-                } else {
-                    Slash
-                }
+            '-' => if self.peek_char() == '>' {
+                self.read_char();
+                Arrow
+            } else {
+                Minus
             }
-            '!' => {
-                if self.peek_char() == '=' {
-                    self.read_char();
-                    NotEqual
-                } else {
-                    Bang
-                }
+            '*' => Asterisk,
+            '/' => if self.peek_char() == '/' {
+                self.read_char();
+                self.skip_comment();
+                self.next_token()?
+            } else {
+                Slash
+            }
+            '!' => if self.peek_char() == '=' {
+                self.read_char();
+                NotEqual
+            } else {
+                Bang
             }
             ',' => Comma,
             ':' => Colon,
@@ -88,17 +83,15 @@ impl Lexer {
             '}' => RBrace,
             '"' => Token::String(self.read_string()?.to_string()),
             '\0' => Eof,
-            ch => {
-                if ch.is_ascii_digit() {
-                    self.unread_byte();
-                    Int(self.read_int().to_string())
-                } else if Self::is_ident_char(ch) {
-                    self.unread_byte();
-                    let ident = self.read_ident()?;
-                    Token::from_symbol(ident)
-                } else {
-                    Illegal
-                }
+            ch => if ch.is_ascii_digit() {
+                self.unread_byte();
+                Int(self.read_int().to_string())
+            } else if Self::is_ident_char(ch) {
+                self.unread_byte();
+                let ident = self.read_ident()?;
+                Token::from_symbol(ident)
+            } else {
+                Illegal
             }
         })
     }

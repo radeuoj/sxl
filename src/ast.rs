@@ -1,4 +1,4 @@
-use anyhow::bail;
+use std::ops::Deref;
 
 use crate::token::Token;
 
@@ -28,24 +28,26 @@ pub enum Expression {
     },
 }
 
-impl std::fmt::Display for Expression {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        use Expression::*;
+#[derive(Debug, PartialEq)]
+pub struct FuncParam {
+    pub name: String,
+    pub vtype: String,
+}
 
-        let res = match self {
-            Ident { value } => value.to_string(),
-            Int { value } => value.to_string(),
-            String { value } => format!("\"{value}\""),
-            Unary { op, right } => format!("({op}{right})"),
-            Binary { op, left, right } => format!("({left} {op} {right})"),
-            Call { func, args } => format!("{func}({})", args
-                .iter()
-                .map(|arg| format!("{arg}"))
-                .reduce(|acc, s| format!("{acc}, {s}"))
-                .unwrap_or_default())
-        };
+#[derive(Debug, PartialEq)]
+pub struct BlockStmt(pub Vec<Statement>);
 
-        write!(f, "{res}")
+impl Deref for BlockStmt {
+    type Target = Vec<Statement>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl Into<Statement> for BlockStmt {
+    fn into(self) -> Statement {
+        Statement::Block { body: self }
     }
 }
 
@@ -53,49 +55,10 @@ impl std::fmt::Display for Expression {
 pub enum Statement {
     Let { name: String, vtype: String, value: Option<Expression> },
     Return { value: Expression },
-    If { cond: Expression, then: Box<Statement>, else_then: Option<Box<Statement>> },
+    If { cond: Expression, then: BlockStmt, else_then: Option<BlockStmt> },
     Expression { value: Expression },
-    Block { body: Vec<Statement> },
-}
-
-impl Statement {
-    pub fn unwrap_block(&self) -> anyhow::Result<&[Statement]> {
-        match self {
-            Statement::Block { body } => Ok(body),
-            stmt => bail!("{stmt} is not block"),
-        }
-    }
-}
-
-impl std::fmt::Display for Statement  {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        use Statement::*;
-
-        let res = match self {
-            Let { name, vtype, value } => {
-                match value {
-                    Some(value) => format!("let {}: {} = {value};",
-                        name, vtype),
-                    None => format!("let {}: {};",
-                        name, vtype),
-                }
-            }
-            Return { value } => format!("return {value};"),
-            If { cond, then, else_then } => format!("if {} {} {}",
-                cond, then, match else_then {
-                    Some(else_then) => format!("else {}", else_then),
-                    None => "".to_string(),
-                }),
-            Expression { value } => format!("{value};"),
-            Block { body } => format!("{{\n{}\n}}", body
-                .iter()
-                .map(|stmt| format!("{stmt}"))
-                .reduce(|acc, stmt| format!("{acc}\n{stmt}"))
-                .unwrap_or_default()),
-        };
-
-        write!(f, "{res}")
-    }
+    Block { body: BlockStmt },
+    Func { name: String, vtype: String, params: Vec<FuncParam>, body: BlockStmt },
 }
 
 pub struct Program {
