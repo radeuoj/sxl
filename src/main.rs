@@ -1,4 +1,6 @@
 use std::process::Command;
+use anyhow::bail;
+
 use crate::{compiler::Compiler, lexer::Lexer, parser::Parser};
 
 mod ast;
@@ -8,40 +10,67 @@ mod parser;
 mod token;
 
 enum Mode {
-    CompileAndRun,
+    Compile { file: String },
+    CompileAndRun { file: String },
     LexerRepl,
     ParserRepl,
 }
 
 impl Mode {
-    fn from_args(args: std::env::Args) -> Self {
-        match args.skip(1).next()
-            .unwrap_or("--compile-and-run".to_string()).as_str() {
-            "--compile-and-run" => Mode::CompileAndRun,
-            "--lexer-repl" => Mode::LexerRepl,
-            "--parser-repl" => Mode::ParserRepl,
-            _ => unreachable!(),
+    fn from_args(args: std::env::Args) -> anyhow::Result<Self> {
+        let mut file = None;
+        let mut run_mode = false;
+
+        for arg in args.skip(1) {
+            match arg.as_str() {
+                "--compile" => (),
+                "--run" => run_mode = true,
+                "--lexer-repl" => return Ok(Mode::LexerRepl),
+                "--parser-repl" => return Ok(Mode::ParserRepl),
+                arg => file = Some(arg.to_string()),
+            };
         }
+
+        let Some(file) = file else {
+            bail!("No file attached!")
+        };
+
+        Ok(if run_mode {
+            Mode::CompileAndRun { file }
+        } else {
+            Mode::Compile { file }
+        })
+    }
+
+    fn compile_file(&self, file: &str) -> anyhow::Result<()> {
+        let input = std::fs::read(file)?;
+        let lexer = Lexer::new(input);
+        let mut parser = Parser::new(lexer)?;
+        let program = parser.parse_program()?;
+        let compiler = Compiler::new();
+        let output = compiler.compile_program(program);
+        std::fs::write(format!("{file}.c"), output)?;
+        Ok(())
     }
 
     fn run(self) -> anyhow::Result<()> {
         Ok(match self {
-            Mode::CompileAndRun => {
-                let input = std::fs::read("test.sxl")?;
-                let lexer = Lexer::new(input);
-                let mut parser = Parser::new(lexer)?;
-                let program = parser.parse_program()?;
-                let compiler = Compiler::new();
-                let output = compiler.compile_program(program);
-                std::fs::write("test.c", output)?;
+            Mode::Compile { ref file } => self.compile_file(file)?,
+            Mode::CompileAndRun { ref file } => {
+                self.compile_file(file)?;
+                let exe = format!("{}.exe", if file.ends_with(".sxl") {
+                    &file[..file.len()-4]
+                } else {
+                    file
+                });
 
                 Command::new("clang")
-                    .args(["-o", "test.exe", "test.c"])
+                    .args(["-o", &exe, &format!("{file}.c")])
                     .spawn()?
                     .wait()?;
 
                 let path = std::env::current_dir()?;
-                Command::new(path.join("test.exe"))
+                Command::new(path.join(&exe))
                     .spawn()?
                     .wait()?;
             }
@@ -53,5 +82,5 @@ impl Mode {
 
 fn main() -> anyhow::Result<()> {
     let mode = Mode::from_args(std::env::args());
-    mode.run()
+    mode?.run()
 }
