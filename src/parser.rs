@@ -273,14 +273,27 @@ impl Parser {
                     bail!("{} not found in current scope", vtype);
                 }
 
-                let body = self.parse_block_statement(env)?;
+                let decl = FuncDecl {
+                    name: name.clone(),
+                    vtype: ValueType::Type(vtype).into(),
+                    params: params.clone(),
+                };
+
+                env.push_symbol(Symbol { 
+                    name, 
+                    vtype: ValueType::Func(decl.clone()),
+                })?;
+
+                let mut env = Environment::from_parent(env);
+
+                for param in &params {
+                    env.push_symbol(param.clone())?;
+                }
+
+                let body = self.parse_block_statement(&env)?;
 
                 return Ok(Statement::Func {
-                    decl: FuncDecl {
-                        name,
-                        vtype: ValueType::Type(vtype).into(),
-                        params,
-                    },
+                    decl,
                     body,
                 });
             }
@@ -314,7 +327,8 @@ impl Parser {
         if errs.is_empty() {
             Ok(BlockStmt(body))
         } else {
-            bail!("{:?}", errs)
+            bail!(errs.iter().map(|err| format!("{err}"))
+                .reduce(|acc, err| format!("{acc}\n{err}")).unwrap_or_default());
         }
     }
 
@@ -357,6 +371,7 @@ impl Parser {
         let mut env = Environment::new();
 
         env.push_vtype(ValueType::Type("i32".to_owned())).unwrap();
+        env.push_vtype(ValueType::Type("str".to_owned())).unwrap();
         env.push_symbol(Symbol { name: "printf".to_owned(), vtype: ValueType::Func(FuncDecl { 
             name: "printf".to_owned(), 
             vtype: ValueType::Type("void".to_owned()).into(), 
@@ -373,7 +388,8 @@ impl Parser {
             }
         }
 
-        if !errs.is_empty() { anyhow::bail!(format!("{:?}", errs)) }
+        if !errs.is_empty() { bail!(errs.iter().map(|err| format!("{err}"))
+            .reduce(|acc, err| format!("{acc}\n{err}")).unwrap_or_default()) }
         Ok(Program { body })
     }
 }

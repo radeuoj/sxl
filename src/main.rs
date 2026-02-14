@@ -47,11 +47,19 @@ impl Mode {
         let input = std::fs::read(file)?;
         let lexer = Lexer::new(input);
         let mut parser = Parser::new(lexer)?;
-        let program = parser.parse_program()?;
-        let compiler = Compiler::new();
-        let output = compiler.compile_program(program);
-        std::fs::write(format!("{file}.c"), output)?;
-        Ok(())
+
+        match parser.parse_program() {
+            Ok(program) => {
+                let compiler = Compiler::new();
+                let output = compiler.compile_program(program);
+                std::fs::write(format!("{file}.c"), output)?;
+                Ok(())
+            }
+            Err(err) => {
+                eprintln!("{}", err);
+                bail!("Compilation failed");
+            },
+        }
     }
 
     fn run(self) -> anyhow::Result<()> {
