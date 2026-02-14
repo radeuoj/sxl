@@ -1,5 +1,5 @@
 use std::process::Command;
-use anyhow::bail;
+use anyhow::{Context, bail};
 
 use crate::{compiler::Compiler, lexer::Lexer, parser::Parser};
 
@@ -66,7 +66,7 @@ impl Mode {
 
                 Command::new("clang")
                     .args(["-o", &exe, &format!("{file}.c")])
-                    .spawn()?
+                    .spawn().with_context(|| "Clang not found")?
                     .wait()?;
 
                 let path = std::env::current_dir()?;
