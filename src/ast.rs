@@ -1,9 +1,30 @@
 use std::ops::Deref;
-
 use crate::token::Token;
 
+#[derive(Debug, Clone, PartialEq)]
+pub enum ValueType {
+    Type(String),
+    Func(FuncDecl)
+}
+
+impl ValueType {
+    pub fn i32() -> Self {
+        Self::Type("i32".to_owned())
+    }
+
+    pub fn str() -> Self {
+        Self::Type("str".to_owned())
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Symbol {
+    pub name: String,
+    pub vtype: ValueType,
+}
+
 #[derive(Debug, PartialEq)]
-pub enum Expression {
+pub enum ExprKind {
     Ident {
         value: String,
     },
@@ -29,6 +50,12 @@ pub enum Expression {
 }
 
 #[derive(Debug, PartialEq)]
+pub struct Expression {
+    pub kind: ExprKind,
+    pub vtype: ValueType,
+}
+
+#[derive(Debug, PartialEq)]
 pub struct BlockStmt(pub Vec<Statement>);
 
 impl Deref for BlockStmt {
@@ -45,22 +72,10 @@ impl From<BlockStmt> for Statement {
     }
 }
 
-#[derive(Debug, PartialEq)]
-pub enum ValueType {
-    Type(String),
-    Func(FuncDecl)
-}
-
-#[derive(Debug, PartialEq)]
-pub struct Symbol {
-    pub name: String,
-    pub vtype: ValueType,
-}
-
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct FuncDecl {
     pub name: String,
-    pub vtype: String,
+    pub vtype: Box<ValueType>,
     pub params: Vec<Symbol>
 }
 

@@ -1,4 +1,4 @@
-use crate::ast::{BlockStmt, Expression, FuncDecl, Program, Statement, Symbol, ValueType};
+use crate::ast::{BlockStmt, ExprKind, Expression, FuncDecl, Program, Statement, Symbol, ValueType};
 
 pub struct Compiler {
 
@@ -12,6 +12,8 @@ impl Compiler {
     pub fn compile_program(&self, program: Program) -> String {
         format!(r#"// compiled from SXL
 #include <stdio.h>
+#include <stdint.h>
+typedef int32_t i32;
 typedef const char* str;
 
 {}
@@ -71,9 +73,9 @@ typedef const char* str;
     }
 
     fn compile_expression(&self, expr: &Expression) -> String {
-        use Expression::*;
+        use ExprKind::*;
 
-        match expr {
+        match &expr.kind {
             Ident { value } => value.to_string(),
             Int { value } => value.to_string(),
             String { value } => format!("\"{value}\""),
@@ -92,12 +94,16 @@ typedef const char* str;
     }
 
     fn compile_func_decl(&self, decl: &FuncDecl) -> String {
-        format!("{} {}({})", 
-            decl.vtype, decl.name,
-            decl.params.iter()
-                .map(|param| self.compile_symbol(param))
-                .reduce(|acc, s| format!("{acc}, {s}"))
-                .unwrap_or_default())
+        match decl.vtype.as_ref() {
+            ValueType::Type(vtype) =>
+                format!("{} {}({})", 
+                    vtype, decl.name,
+                    decl.params.iter()
+                        .map(|param| self.compile_symbol(param))
+                        .reduce(|acc, s| format!("{acc}, {s}"))
+                        .unwrap_or_default()),
+            _ => todo!(),
+        }
     }
 
     fn compile_symbol(&self, symbol: &Symbol) -> String {
