@@ -1,6 +1,0 @@
-fn hello(who) {
-    "Hello " + who;
-}
-
-hello("world");
-hello("Marcus");

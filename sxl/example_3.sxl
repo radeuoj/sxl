@@ -1,5 +1,0 @@
-fn twice(a) {
-    a * 2;
-}
-
-twice(30);

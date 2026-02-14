@@ -58,11 +58,11 @@ impl Mode {
             Mode::Compile { ref file } => self.compile_file(file)?,
             Mode::CompileAndRun { ref file } => {
                 self.compile_file(file)?;
-                let exe = format!("{}.exe", if file.ends_with(".sxl") {
+                let exe = if file.ends_with(".sxl") {
                     &file[..file.len()-4]
                 } else {
                     file
-                });
+                };
 
                 Command::new("clang")
                     .args(["-o", &exe, &format!("{file}.c")])

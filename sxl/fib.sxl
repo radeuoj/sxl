@@ -1,9 +1,0 @@
-fn fib(n) {
-    if n <= 1 {
-        return n;
-    } else {
-        return fib(n - 2) + fib(n - 1);
-    }
-}
-
-fib(35); // this is ridiculously slow (15s) vs sub 100ms on rust
