@@ -1,2 +1,3 @@
 - extract identifier into a separate type like block stmt
 - env vtypes should be string
+- should check for return value in functions
