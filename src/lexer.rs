@@ -97,13 +97,13 @@ impl Lexer {
     }
 
     fn skip_whitespace(&mut self) {
-        while " \t\n\r".contains(self.peek_char() as char) {
+        while " \t\n\r".contains(self.peek_char()) {
             self.read_char();
         }
     }
 
     fn skip_comment(&mut self) {
-        while !"\0\n".contains(self.peek_char() as char) {
+        while !"\0\n".contains(self.peek_char()) {
             self.read_char();
         }
     }

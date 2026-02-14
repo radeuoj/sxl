@@ -1,6 +1,6 @@
 use std::io::Write;
 use anyhow::bail;
-use crate::{ast::{BlockStmt, Expression, FuncParam, Program, Statement}, lexer::Lexer, token::Token};
+use crate::{ast::{BlockStmt, Expression, FuncDecl, FuncParam, Program, Statement}, lexer::Lexer, token::Token};
 
 pub struct Parser {
     lexer: Lexer,
@@ -90,7 +90,7 @@ impl Parser {
 
     fn parse_int(&self, lit: &str) -> anyhow::Result<Expression> {
         Ok(Expression::Int {
-            value: i32::from_str_radix(lit, 10)?
+            value: lit.parse()?,
         })
     }
 
@@ -187,7 +187,14 @@ impl Parser {
                 let vtype = self.expect_ident()?;
                 let body = self.parse_block_statement()?;
 
-                return Ok(Statement::Func { name, vtype, params, body });
+                return Ok(Statement::Func {
+                    decl: FuncDecl {
+                        name,
+                        vtype,
+                        params,
+                    },
+                    body,
+                });
             }
             _ => Statement::Expression {
                 value: self.parse_expression(BindingPower::Lowest)?

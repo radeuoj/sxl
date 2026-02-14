@@ -45,9 +45,9 @@ impl Deref for BlockStmt {
     }
 }
 
-impl Into<Statement> for BlockStmt {
-    fn into(self) -> Statement {
-        Statement::Block { body: self }
+impl From<BlockStmt> for Statement {
+    fn from(value: BlockStmt) -> Self {
+        Statement::Block { body: value }
     }
 }
 
@@ -58,7 +58,14 @@ pub enum Statement {
     If { cond: Expression, then: BlockStmt, else_then: Option<BlockStmt> },
     Expression { value: Expression },
     Block { body: BlockStmt },
-    Func { name: String, vtype: String, params: Vec<FuncParam>, body: BlockStmt },
+    Func { decl: FuncDecl, body: BlockStmt },
+}
+
+#[derive(Debug, PartialEq)]
+pub struct FuncDecl {
+    pub name: String,
+    pub vtype: String,
+    pub params: Vec<FuncParam>
 }
 
 pub struct Program {

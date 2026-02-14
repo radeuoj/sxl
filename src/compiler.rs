@@ -1,4 +1,4 @@
-use crate::ast::{BlockStmt, Expression, Program, Statement};
+use crate::ast::{BlockStmt, Expression, FuncDecl, Program, Statement};
 
 pub struct Compiler {
 
@@ -48,14 +48,10 @@ typedef const char* str;
                         None => "".to_string(),
                     }),
                 Expression { value } => format!("{};",
-                    self.compile_expression(&value)),
+                    self.compile_expression(value)),
                 Block { body } => self.compile_block_statement(body, indent),
-                Func { name, vtype, params, body } => format!("{} {}({}) {}",
-                    vtype, name,
-                    params.iter()
-                        .map(|param| format!("{} {}", param.vtype, param.name))
-                        .reduce(|acc, s| format!("{acc}, {s}"))
-                        .unwrap_or_default(),
+                Func { decl, body } => format!("{} {}",
+                    self.compile_func_decl(decl),
                     self.compile_block_statement(body, indent)),
             }
         )
@@ -82,10 +78,10 @@ typedef const char* str;
             Int { value } => value.to_string(),
             String { value } => format!("\"{value}\""),
             Unary { op, right } => format!("{op}{}",
-                self.compile_expression(&right)),
+                self.compile_expression(right)),
             Binary { op, left, right } => format!("{} {op} {}",
-                self.compile_expression(&left),
-                self.compile_expression(&right)),
+                self.compile_expression(left),
+                self.compile_expression(right)),
             Call { func, args } => format!("{}({})",
                 self.compile_expression(func),
                 args.iter()
@@ -93,5 +89,14 @@ typedef const char* str;
                     .reduce(|acc, s| format!("{acc}, {s}"))
                     .unwrap_or_default()),
         }
+    }
+
+    fn compile_func_decl(&self, decl: &FuncDecl) -> String {
+        format!("{} {}({})", 
+            decl.vtype, decl.name,
+            decl.params.iter()
+                .map(|param| format!("{} {}", param.vtype, param.name))
+                .reduce(|acc, s| format!("{acc}, {s}"))
+                .unwrap_or_default())
     }
 }

@@ -8,6 +8,7 @@ mod compiler;
 mod lexer;
 mod parser;
 mod token;
+mod environment;
 
 enum Mode {
     Compile { file: String },
@@ -54,7 +55,7 @@ impl Mode {
     }
 
     fn run(self) -> anyhow::Result<()> {
-        Ok(match self {
+        match self {
             Mode::Compile { ref file } => self.compile_file(file)?,
             Mode::CompileAndRun { ref file } => {
                 self.compile_file(file)?;
@@ -65,18 +66,20 @@ impl Mode {
                 };
 
                 Command::new("clang")
-                    .args(["-o", &exe, &format!("{file}.c")])
+                    .args(["-o", exe, &format!("{file}.c")])
                     .spawn().with_context(|| "Clang not found")?
                     .wait()?;
 
                 let path = std::env::current_dir()?;
-                Command::new(path.join(&exe))
+                Command::new(path.join(exe))
                     .spawn()?
                     .wait()?;
             }
             Mode::LexerRepl => lexer::repl(),
             Mode::ParserRepl => parser::repl(),
-        })
+        }
+
+        Ok(())
     }
 }
 
