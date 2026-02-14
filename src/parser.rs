@@ -218,7 +218,13 @@ impl Parser {
                 let value = match self.peek_token {
                     Token::Assign => {
                         self.next_token()?; // =
-                        Some(self.parse_expression(BindingPower::Lowest, env)?)
+                        let value = self.parse_expression(BindingPower::Lowest, env)?;
+
+                        if ValueType::Type(vtype.clone()) != value.vtype {
+                            bail!("{:?} is not of type {}", value, vtype);
+                        }
+
+                        Some(value)
                     }
                     _ => None,
                 };
