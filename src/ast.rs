@@ -29,12 +29,6 @@ pub enum Expression {
 }
 
 #[derive(Debug, PartialEq)]
-pub struct FuncParam {
-    pub name: String,
-    pub vtype: String,
-}
-
-#[derive(Debug, PartialEq)]
 pub struct BlockStmt(pub Vec<Statement>);
 
 impl Deref for BlockStmt {
@@ -52,6 +46,25 @@ impl From<BlockStmt> for Statement {
 }
 
 #[derive(Debug, PartialEq)]
+pub enum ValueType {
+    Type(String),
+    Func(FuncDecl)
+}
+
+#[derive(Debug, PartialEq)]
+pub struct Symbol {
+    pub name: String,
+    pub vtype: ValueType,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct FuncDecl {
+    pub name: String,
+    pub vtype: String,
+    pub params: Vec<Symbol>
+}
+
+#[derive(Debug, PartialEq)]
 pub enum Statement {
     Let { name: String, vtype: String, value: Option<Expression> },
     Return { value: Expression },
@@ -59,13 +72,6 @@ pub enum Statement {
     Expression { value: Expression },
     Block { body: BlockStmt },
     Func { decl: FuncDecl, body: BlockStmt },
-}
-
-#[derive(Debug, PartialEq)]
-pub struct FuncDecl {
-    pub name: String,
-    pub vtype: String,
-    pub params: Vec<FuncParam>
 }
 
 pub struct Program {

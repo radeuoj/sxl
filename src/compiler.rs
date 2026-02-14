@@ -1,4 +1,4 @@
-use crate::ast::{BlockStmt, Expression, FuncDecl, Program, Statement};
+use crate::ast::{BlockStmt, Expression, FuncDecl, Program, Statement, Symbol, ValueType};
 
 pub struct Compiler {
 
@@ -95,8 +95,16 @@ typedef const char* str;
         format!("{} {}({})", 
             decl.vtype, decl.name,
             decl.params.iter()
-                .map(|param| format!("{} {}", param.vtype, param.name))
+                .map(|param| self.compile_symbol(param))
                 .reduce(|acc, s| format!("{acc}, {s}"))
                 .unwrap_or_default())
+    }
+
+    fn compile_symbol(&self, symbol: &Symbol) -> String {
+        match &symbol.vtype {
+            ValueType::Type(vtype) => format!("{} {}",
+                vtype, symbol.name),
+            ValueType::Func(_) => todo!(),
+        }
     }
 }

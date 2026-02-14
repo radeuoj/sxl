@@ -1,10 +1,11 @@
 use std::io::Write;
 use anyhow::bail;
-use crate::{ast::{BlockStmt, Expression, FuncDecl, FuncParam, Program, Statement}, lexer::Lexer, token::Token};
+use crate::{ast::{BlockStmt, Expression, FuncDecl, Program, Statement, Symbol, ValueType}, environment::Environment, lexer::Lexer, token::Token};
 
-pub struct Parser {
+pub struct Parser<'a> {
     lexer: Lexer,
     peek_token: Token,
+    global_env: Environment<'a>,
 }
 
 #[derive(PartialEq, PartialOrd)]
@@ -18,11 +19,12 @@ pub enum BindingPower {
     Call,
 }
 
-impl Parser {
+impl<'a> Parser<'a> {
     pub fn new(mut lexer: Lexer) -> anyhow::Result<Self> {
         Ok(Self {
             peek_token: lexer.next_token()?,
             lexer,
+            global_env: Environment::new(),
         })
     }
 
@@ -66,7 +68,7 @@ impl Parser {
 
     fn parse_expression(&mut self, bpow: BindingPower) -> anyhow::Result<Expression> {
         let mut left = match self.next_token()? {
-            Token::Ident(name) => Expression::Ident { value: name },
+            Token::Ident(name) => self.parse_ident(&name)?,
             Token::Int(lit) => self.parse_int(&lit)?,
             Token::String(lit) => Expression::String { value: lit },
             op @ (Token::Minus | Token::Bang) => self.parse_unary_expression(op)?,
@@ -86,6 +88,10 @@ impl Parser {
         }
 
         Ok(left)
+    }
+
+    fn parse_ident(&self, name: &str) -> anyhow::Result<Expression> {
+        Ok(Expression::Ident { value: name.to_string() })
     }
 
     fn parse_int(&self, lit: &str) -> anyhow::Result<Expression> {
@@ -229,7 +235,7 @@ impl Parser {
         }
     }
 
-    fn parse_func_params(&mut self) -> anyhow::Result<Vec<FuncParam>> {
+    fn parse_func_params(&mut self) -> anyhow::Result<Vec<Symbol>> {
         self.expect_peek(&Token::LParen)?;
         let mut params = vec![];
 
@@ -249,13 +255,13 @@ impl Parser {
         Ok(params)
     }
 
-    fn parse_func_param(&mut self) -> anyhow::Result<FuncParam> {
+    fn parse_func_param(&mut self) -> anyhow::Result<Symbol> {
         let name = self.expect_ident()?;
 
         self.expect_peek(&Token::Colon)?;
         let vtype = self.expect_ident()?;
 
-        Ok(FuncParam { name, vtype })
+        Ok(Symbol { name, vtype: ValueType::Type(vtype) })
     }
 
     pub fn parse_program(&mut self) -> anyhow::Result<Program> {
